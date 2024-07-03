@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   gsap.from(mainElement, {
       opacity: 0,
-      duration: 1, 
+      duration: 0.4, 
       ease: 'power1.inOut' 
   });
 });
@@ -189,6 +189,63 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+window.onload = function() {
+  var astroGame = document.getElementById('astroGame');
+  const smoke = document.createElement('div');
+  smoke.classList.add('smoke');
 
 
+  astroGame.parentNode.insertBefore(smoke, astroGame.nextSibling);
+
+
+  gsap.to(smoke, {
+    height: '100%',  
+    width: '10%',   
+    opacity: 1,    
+    y: '100%',     
+    duration: 1.7,
+    ease: 'power3.out',
+  });
+
+ 
+  gsap.to(astroGame, {
+    y: '-100%',  // move up
+    x: '50%',    // move right
+    duration: 1.7,
+    ease: 'power3.out',
+    onComplete: function() {
+      gsap.to(astroGame, {
+        y: 0,
+        x: 0,
+        duration: 1.7,
+        ease: 'power3.out',
+        onComplete: function() {
+          smoke.remove();
+        }
+      });
+    }
+  });
+}
+
+
+
+document.addEventListener('keydown', function(event) {
+  if (event.code === 'Space') {
+    handleSpacebar();
+  }
+});
+
+//HIDE ASTRO GAME TO START
+function handleSpacebar() {
+  gsap.to(astroGame, {
+    x: '+=400',    // sposta a destra di 400 pixel
+    y: '-=400',    // sposta verso l'alto di 400 pixel
+    opacity: 0,   
+    duration: 2,   
+    ease: 'power2.out', 
+    onComplete: function() {
+      astroGame.remove();
+    }
+  });
+}
 

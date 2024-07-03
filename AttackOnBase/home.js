@@ -21,20 +21,6 @@ function animateInfo() {
     });
 }
 
-function animatePlanetImage() {
-    const planetB = document.getElementById('planetB');
-
-   
-    planetB.addEventListener('mouseover', () => {
-        gsap.to(planetB, { scale: 1.3, duration: 0.5, ease: "power1.inOut" });
-    });
-
-   
-    planetB.addEventListener('mouseout', () => {
-        gsap.to(planetB, { scale: 1, duration: 0.5, ease: "power1.inOut" });
-    });
-}
-
 
 function animateTitle() {
     const title = document.getElementById('attackTitle');
@@ -104,9 +90,7 @@ function animateAstroImage() {
     });
 }
 
-
 window.onload = function() {
-    animatePlanetImage();
     animateTitle(); 
     animateStartHome();
     animateVolum();
@@ -147,7 +131,7 @@ function goToIndexPage() {
         ease: 'power3.out'
     });
 
-    // Effetto di uscita all'elemento principale (il body)
+
     gsap.to('body', {
         opacity: 0,
         duration: 1, 
@@ -166,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   //POPUP
   function goToPopUp() {
-    //elemento div per il pop-up
+   
     var popup = document.createElement('div');
     popup.id = 'popup';
     popup.style.width = 'auto'; 
@@ -197,13 +181,13 @@ document.addEventListener('DOMContentLoaded', function () {
         <button id="closePopUp">CLOSE</button>
     `;
     
-    // add pop-up alla pagina
+    
     document.body.appendChild(popup);
     
   
     popup.style.opacity = '1';
     
-    
+
     //CLOSE
     var closeBtn = document.getElementById('closePopUp');
     closeBtn.addEventListener('click', function() {
@@ -221,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function () {
     info.addEventListener('click', goToPopUp);
 });
 
+
+
+  
 
 
 

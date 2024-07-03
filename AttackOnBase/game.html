@@ -36,18 +36,32 @@
   </audio>
   
   <img id="volumButtom" src="audio.png"  class="volumImage">
+
   
+  <img id="astroGame" src="astroGame.png"  class="astroGame">
+  <p class="text" id="text" style="opacity: 0;">Intergalactic Governor they are attacking us!</p>
+
+  <p class="textAfter" id="textAfter" style="opacity: 0;">Push SPACE button to START the game. </p>
+
+
   </body>
   </html>
   
   
-  
+  <style>
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+  </style>
   
   <script>
     document.addEventListener("DOMContentLoaded", function() {
         var audio = document.getElementById('audio');
         var volumeButton = document.getElementById('volumButtom');
-  
+
+
         volumeButton.addEventListener('click', function() {
             if (audio.paused) {
                
@@ -58,6 +72,28 @@
             }
         });
     });
+
+    //PRIMA FRASE
+    gsap.to(text, { opacity: 1, duration: 2, delay: 2 }); //compare dopo 2 secondi
+    gsap.to(text, { opacity: 0, duration: 2, delay: 5 }); //resta per 5 secondi
+
+
+    //SECONDA FRASE
+    gsap.to(textAfter, { opacity: 1, duration: 2, delay: 7 }); //compare dopo 2 secondi della frase precedente
+
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            gsap.to(textAfter, { opacity: 0, duration: 1 });
+        }
+    });
+
+
+
+
+
+  
+
+
   </script>
   
  

@@ -6,49 +6,43 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@900&display=swap"> 
     <link rel="stylesheet" href="style.css">
     <script type="module" src="/home.js"></script>
-    
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-
     <title>ATTACK ON BASE</title>
-   
 </head>
 <body>
+    <div><h1 id="attackTitle" class="attackTitle">ATTACK ON BASE</h1></div>
 
 
-
-
-    <div><h1 id="attackTitle" class="attackTitle">ATTACK ON BASE</h1> </div>
+    <!-- FRASE CURVA -->
+    <div style="margin-left: 50%;"> 
+        <svg height="100" width="100%" viewBox="0 0 1200 150">
+            <defs>
+                <path id="curve" d="M0,90 Q250,0 500,100 T1000,50" />
+            </defs>
+            <text>
+                <textPath href="#curve" startOffset="4%">
+                    OH NO! ATTACK ON BASE, HELP...
+                </textPath>
+            </text>
+        </svg>
+    </div>
     
     <div id="container">
-      <button class="startHome" onclick="goToIndexPage()" id="startHome">START</button>
-  </div>
-
+        <button class="startHome" onclick="goToIndexPage()" id="startHome">START</button>
+    </div>
 
     <audio id="audio">
         <source src="/index.mp3" type="audio/mpeg">
     </audio>
-    
 
     <img id="volumButtom" src="audio.png"  class="volumImage">
-
-    <img id="planetB" src="planetB.png"  class="planetB">
-
     <img id="astro" src="astro.png"  class="astro">
-
-
     <img id="info" src="info.png"  class="infoImg" onclick="goToPopUp()">
-
-
 </body>
 </html>
 
-
-
-
 <style>
- 
- html, body {
+html, body {
     height: 100%;
     margin: 0;
 }
@@ -69,22 +63,45 @@ body {
     text-align: center;
 }
 
+svg {
+    position: relative;
+    margin-top: 410px;
+}
 
+text {
+    font-size: 60px;
+    fill: white;
+    text-shadow: 
+        1px 1px 0px #000, 
+        2px 2px 0px #000, 
+        3px 3px 0px #000, 
+        4px 4px 0px #000, 
+        5px 5px 0px #000, 
+        6px 6px 0px #000;
+}
+
+path {
+    stroke: none;
+    fill: none;
+}
+
+textPath {
+    text-anchor: start;
+}
 </style>
 
-
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-      var audio = document.getElementById('audio');
-      var volumeButton = document.getElementById('volumButtom');
-  
-      volumeButton.addEventListener('click', function() {
-          if (audio.paused) {
-              audio.play();
-          } else {
-              audio.pause();
-          }
-      });
-  });
-  </script>
-  
+document.addEventListener("DOMContentLoaded", function() {
+    var audio = document.getElementById('audio');
+    var volumeButton = document.getElementById('volumButtom');
+
+    volumeButton.addEventListener('click', function() {
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+        }
+    });
+});
+
+</script>
