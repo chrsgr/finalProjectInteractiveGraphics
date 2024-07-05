@@ -1,9 +1,24 @@
+/*
+COSE ANOCRA DA FARE: 
+-torretta (movimento destra e sinsitra) e rispettivi spari
+-implementare logica di collisoni
+-livelli 
+  -per difficoltà: luci, colori, velocità, numero di invasori
+-boss finale (per vincere)
+  -luci stroboscopiche quando entra 
+-animazioni quando si distrugge ufo
+-pulsanti start/stop
+-score ad ogni ufo distrutto per aumento di livello
+*/
+
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import fontSrc from 'three/examples/fonts/helvetiker_bold.typeface.json?url';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+//import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+//import fontSrc from 'three/examples/fonts/helvetiker_bold.typeface.json?url';
+//import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
 //SCENE
 const scene = new THREE.Scene();
@@ -25,7 +40,7 @@ loader.load('gameBack.jpg', (texture) => {
   const planeMaterial = new THREE.MeshBasicMaterial({
     color: 0x000000, 
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.2,
     depthTest: false,
   });
 
@@ -50,26 +65,25 @@ renderer.setSize(size.width, size.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
 document.body.appendChild(renderer.domElement);
 
-// Resolution update function
+// Resolution 
 function updateResolution() {
   size.width = window.innerWidth;
   size.height = window.innerHeight;
 
-  // Update the camera aspect ratio
+  //Ratio
   camera.aspect = size.width / size.height;
   camera.updateProjectionMatrix();
 
-  // Update renderer size
+ 
   renderer.setSize(size.width, size.height);
 }
 
-// Function that manages window resizing
+//Window resize
 function handleResize() {
   updateResolution();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
 }
 
-// Listener for the window resize event
 window.addEventListener('resize', handleResize);
 
 
@@ -80,37 +94,162 @@ controls.dampingFactor = 0.25;
 
 
 //LIGHTS
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); 
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(5, 5, 5);
-directionalLight.castShadow = true;
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); 
+directionalLight.position.set(5, 5, 5); 
+directionalLight.castShadow = true; 
 scene.add(directionalLight);
 
-const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-pointLight.position.set(0, -2, 5);
-pointLight.castShadow = true;
+
+const pointLight = new THREE.PointLight(0xffffff, 1, 100); 
+pointLight.position.set(0, 0, 5); 
+pointLight.castShadow = true; 
 scene.add(pointLight);
 
-const pointLightHelper = new THREE.PointLightHelper(pointLight, 0.2);
-scene.add(pointLightHelper);
+
+//INVADERS
+let ufoObject; 
+function loadUfoObject() {
+  const mtlLoader = new MTLLoader();
+  mtlLoader.load('AttackOnBase/public/obj/UFO_obj/UFO.mtl', function(materials) {
+      //console.log('MTL ok:', materials);
+
+      materials.preload();
+
+      const objLoader = new OBJLoader();
+      objLoader.setMaterials(materials);
+      objLoader.load('UFO.obj', function(object) {
+         // console.log('OBJ ok:', object);
+
+       
+          object.position.set(0, 0, 0);
+          object.scale.set(0.40,0.40, 0.40);
+          scene.add(object);
+
+          ufoObject = object;
+          const light = new THREE.PointLight(0xff0000, 3, 5); // reminder: colore, intensità, distanza
+          light.position.set(0, 0, 0);
+          object.add(light); 
+
+
+          startAutomaticMovement();
+      });
+  }, undefined, function(error) {
+      //console.error('Error MTL file:', error);
+  });
+
+
+}
+
+
+//MOVIMENTO AUTOMATICO
+function startAutomaticMovement() {
+  let ufoHorizontalSpeed = 0.02; 
+  let ufoVerticalSpeed = 0.2; 
+  let ufoVerticalPositionY = 3;
+  let ufoPositionX = 0;  
+  let sceneWidth = 4; 
+  let moveRight = true; 
+  let moveDown = false; 
+
+  let shootingInterval = 2000; 
+  let lastShotTime = 0; 
+
+  function animateUFO() {
+    // orizzontale 
+    if (moveRight) {
+      ufoPositionX += ufoHorizontalSpeed;
+    } else {
+      ufoPositionX -= ufoHorizontalSpeed;
+    }
+
+    //aggiorno
+    ufoObject.position.set(ufoPositionX, ufoVerticalPositionY, 0);
+
+    //controllo cambio posizione
+    if (ufoPositionX >= sceneWidth || ufoPositionX <= -sceneWidth) {
+      moveRight = !moveRight;
+      moveDown = true;
+    }
+
+    //Verticale
+    if (moveDown) {
+      ufoVerticalPositionY -= ufoVerticalSpeed;
+      moveDown = false; 
+    }
+
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
+    }
+
+    //tempo shot
+    const currentTime = performance.now();
+    const timeSinceLastShot = currentTime - lastShotTime;
+
+    if (timeSinceLastShot >= shootingInterval) {
+      shootBulletsUfo(); 
+      lastShotTime = currentTime; 
+    }
+
+ 
+    requestAnimationFrame(animateUFO);
+  }
+
+  function shootBulletsUfo() {
+    createBullet(ufoObject.position.clone()); 
+
+    shootingInterval += 200; 
+  }
+
+  animateUFO();
+
+  gsap.from(ufoObject.position, {
+    duration: 1,
+    y: 5, 
+    ease: 'power3.out',
+   
+  });
+}
+
+
+
+
+let ufoBullets = []; 
+
+//BULLET UFO
+function createBullet(position) {
+  const geometry = new THREE.SphereGeometry(0.05, 16, 16); 
+  const material = new THREE.MeshBasicMaterial({ color: '#ffd700' });
+  const bullet = new THREE.Mesh(geometry, material);
+  bullet.position.copy(position); 
+  scene.add(bullet); 
+  ufoBullets.push(bullet); 
+}
+
+
+
 
 function animate() {
+
+  ufoBullets.forEach(bullet => {
+    bullet.position.y -= 0.1; 
+
+    if (bullet.position.y < -5) {
+      scene.remove(bullet); 
+    }
+  });
+
+  ufoBullets = ufoBullets.filter(bullet => scene.children.includes(bullet));
+
+
   controls.update(); 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
 animate();
-
-
-
-
-
-
-
-
 
 
 
@@ -235,17 +374,21 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-//HIDE ASTRO GAME TO START
+
+// Function to handle spacebar press
 function handleSpacebar() {
+  // Hide or remove the astroGame element
   gsap.to(astroGame, {
-    x: '+=400',    // sposta a destra di 400 pixel
-    y: '-=400',    // sposta verso l'alto di 400 pixel
-    opacity: 0,   
-    duration: 2,   
-    ease: 'power2.out', 
+    x: '+=400',    // move right by 400 pixels
+    y: '-=400',    // move up by 400 pixels
+    opacity: 0,    // fade out
+    duration: 2,   // 2 seconds duration
+    ease: 'power2.out', // easing function
     onComplete: function() {
-      astroGame.remove();
+      astroGame.remove(); // remove the element
+      loadUfoObject(); // load and display the gun object
+      loadTurretObject();
     }
+
   });
 }
-
