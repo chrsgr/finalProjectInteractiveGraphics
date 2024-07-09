@@ -1,6 +1,6 @@
 /*
 COSE ANOCRA DA FARE: 
--torretta (movimento destra e sinsitra) e rispettivi spari
+-aggiustare movimento torretta
 -implementare logica di collisoni
 -livelli 
   -per difficoltà: luci, colori, velocità, numero di invasori
@@ -9,6 +9,8 @@ COSE ANOCRA DA FARE:
 -animazioni quando si distrugge ufo
 -pulsanti start/stop
 -score ad ogni ufo distrutto per aumento di livello
+-aggiugnere vignetta boss finale
+-power up
 */
 
 import './style.css';
@@ -93,7 +95,8 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.25; 
 
 
-//LIGHTS
+//LIGHTS 
+//TO-DO: dare una sistemata
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); 
 scene.add(ambientLight);
 
@@ -124,7 +127,7 @@ function loadUfoObject() {
          // console.log('OBJ ok:', object);
 
        
-          object.position.set(0, 0, 0);
+          object.position.set(1, -2, 0);
           object.scale.set(0.40,0.40, 0.40);
           scene.add(object);
 
@@ -215,10 +218,9 @@ function startAutomaticMovement() {
 
 
 
-
+//BULLET UFO
 let ufoBullets = []; 
 
-//BULLET UFO
 function createBullet(position) {
   const geometry = new THREE.SphereGeometry(0.05, 16, 16); 
   const material = new THREE.MeshBasicMaterial({ color: '#ffd700' });
@@ -227,6 +229,97 @@ function createBullet(position) {
   scene.add(bullet); 
   ufoBullets.push(bullet); 
 }
+
+
+
+
+//TURRET
+let turretObject; 
+function loadTurretObject() {
+  const mtlLoader = new MTLLoader();
+  mtlLoader.load('AttackOnBase/public/obj/PolygonDan_Turret/turret.mtl', function(materials) {
+      //console.log('MTL ok:', materials);
+
+      materials.preload();
+
+      const objLoader = new OBJLoader();
+      objLoader.setMaterials(materials);
+      objLoader.load('turret.obj', function(object) {
+         //console.log('OBJ ok:', object);
+
+       
+          object.position.set(0, -3.4, 0);
+          object.scale.set(0.30,0.30, 0.30);
+          scene.add(object);
+
+          turretObject = object;
+          const light = new THREE.PointLight('#0000ff', 3, 5); 
+          light.position.set(0, 0, 0);
+          object.add(light); 
+
+         
+          object.rotation.set(0, Math.PI/2, 0);
+
+      });
+  }, undefined, function(error) {
+       //console.error('Error MTL file:', error);
+  });
+
+  gsap.from(turretObject.position, {
+    duration: 1,
+    y: 5, 
+    ease: 'power3.out',
+   
+  });
+}
+
+
+// BULLET TURRET
+let turretBullets = []; 
+function createTurretBullet(position) {
+  const geometry = new THREE.SphereGeometry(0.05, 16, 16); 
+  const material = new THREE.MeshBasicMaterial({ color: '#00ff00' }); 
+  const bullet = new THREE.Mesh(geometry, material);
+  bullet.position.copy(position); 
+  scene.add(bullet); 
+  turretBullets.push(bullet); 
+}
+
+function shootTurret() {
+  createTurretBullet(turretObject.position.clone());
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.code === 'Space') {
+    shootTurret();
+  }
+});
+
+
+
+
+// TURRET MOVEMENT 
+const turretSpeed = 0.2; 
+function moveTurretLeft() {
+  if (turretObject) {
+    turretObject.position.x -= turretSpeed;
+  }
+}
+
+function moveTurretRight() {
+  if (turretObject) {
+    turretObject.position.x += turretSpeed;
+  }
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.code === 'ArrowLeft') {
+    moveTurretLeft();
+  } else if (event.code === 'ArrowRight') {
+    moveTurretRight();
+  }
+});
+
 
 
 
@@ -240,7 +333,16 @@ function animate() {
       scene.remove(bullet); 
     }
   });
+  
 
+  turretBullets.forEach(bullet => {
+    bullet.position.y += 0.1; 
+    if (bullet.position.y > 5) {
+      scene.remove(bullet);
+    }
+  });
+
+  turretBullets = turretBullets.filter(bullet => scene.children.includes(bullet));
   ufoBullets = ufoBullets.filter(bullet => scene.children.includes(bullet));
 
 
@@ -252,6 +354,19 @@ function animate() {
 animate();
 
 
+
+
+
+
+
+
+
+
+
+
+/*///////////////////////////////////////////////////////////////////////////////////////////////*/
+/*///////////////////////////////////////////////////////////////////////////////////////////////*/
+/*///////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //START-STOP
 document.addEventListener('DOMContentLoaded', function () {
@@ -275,8 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
       ease: 'power1.inOut' 
   });
 });
-
-
 
 
 //ISTRUZIONI GIOCO 
@@ -348,8 +461,8 @@ window.onload = function() {
 
  
   gsap.to(astroGame, {
-    y: '-100%',  // move up
-    x: '50%',    // move right
+    y: '-100%',  
+    x: '50%',   
     duration: 1.7,
     ease: 'power3.out',
     onComplete: function() {
@@ -367,7 +480,6 @@ window.onload = function() {
 }
 
 
-
 document.addEventListener('keydown', function(event) {
   if (event.code === 'Space') {
     handleSpacebar();
@@ -375,18 +487,17 @@ document.addEventListener('keydown', function(event) {
 });
 
 
-// Function to handle spacebar press
 function handleSpacebar() {
-  // Hide or remove the astroGame element
+  // Hide and see element
   gsap.to(astroGame, {
-    x: '+=400',    // move right by 400 pixels
-    y: '-=400',    // move up by 400 pixels
-    opacity: 0,    // fade out
-    duration: 2,   // 2 seconds duration
-    ease: 'power2.out', // easing function
+    x: '+=400',  
+    y: '-=400',   
+    opacity: 0,    
+    duration: 2,   
+    ease: 'power2.out', 
     onComplete: function() {
-      astroGame.remove(); // remove the element
-      loadUfoObject(); // load and display the gun object
+      astroGame.remove();
+      loadUfoObject(); 
       loadTurretObject();
     }
 
