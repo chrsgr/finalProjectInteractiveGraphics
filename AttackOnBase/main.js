@@ -1,12 +1,12 @@
 /*
 COSE ANOCRA DA FARE: 
--implementare logica di collisoni con bullet: restart
--aggiungere vite e logica
--boss finale (per vincere)
-  -luci stroboscopiche quando entra 
+-luci  quando entra il boss
 -pulsanti start/stop
 -aggiugnere vignetta boss finale
 -power up
+- aggiustare velocità movimemento ufo
+-aggiungere timer
+-barra di vita ufo4
 */
 
 import './style.css';
@@ -121,8 +121,31 @@ pointLight.position.set(0, 0, 5);
 pointLight.castShadow = true; 
 scene.add(pointLight);  
 
+
+
 /////////////////////////////////////////////////////
+                      /* VITE */
 /////////////////////////////////////////////////////
+
+let lives = 3;
+let hearts = [];
+
+const textureLoader = new THREE.TextureLoader();
+const razzoTexture = textureLoader.load('razzo2.png'); 
+
+function createHearts() {
+  hearts.forEach(heart => scene.remove(heart));
+  hearts = [];
+
+  for (let i = 0; i < lives; i++) {
+    const razzoGeometry = new THREE.PlaneGeometry(0.35, 0.35);
+    const razzoMaterial = new THREE.MeshBasicMaterial({ map: razzoTexture, transparent: true, alphaTest: 0.5 });
+    const razzo = new THREE.Mesh(razzoGeometry, razzoMaterial);
+    razzo.position.set(5 - i * 0.5, -3.25, 0); 
+    scene.add(razzo);
+    hearts.push(razzo); 
+  }
+}
 
 
 /////////////////////////////////////////////////////
@@ -238,6 +261,47 @@ function loadUfoObject3() {
 
 }
 
+
+
+
+
+//INVADERS 4(rosso, boss finale)
+let ufoObject4; 
+
+function loadUfoObject4() {
+  const mtlLoader = new MTLLoader();
+  mtlLoader.load('AttackOnBase/public/obj/UFO_obj/UFO.mtl', function(materials) {
+      //console.log('MTL ok:', materials);
+
+      materials.preload();
+
+      const objLoader4 = new OBJLoader();
+      objLoader4.setMaterials(materials);
+      objLoader4.load('UFO.obj', function(object4) {
+         // console.log('OBJ ok:', object);
+
+       
+          object4.position.set(1.40, -2.3, 0);
+          object4.scale.set(0.55,0.55, 0.55);
+          scene.add(object4);
+
+          ufoObject4 = object4;
+          const light = new THREE.PointLight('#ff0000', 10, 5); // reminder: colore, intensità, distanza
+          light.position.set(0, 0, 0);
+          object4.add(light); 
+
+            ufoDestroyed4 = false;
+        
+
+          startAutomaticMovement4();
+      });
+  }, undefined, function(error) {
+      //console.error('Error MTL file:', error);
+  });
+
+
+}
+
 //BULLET UFO
 let ufoBullets = []; 
 
@@ -254,7 +318,7 @@ function createBullet(position) {
 
 
 /////////////////////////////////////////////////////
-                      /*DISTRUZIONE */
+                   /*DISTRUZIONE */
 /////////////////////////////////////////////////////
 
 //DISTRUZIONE 1
@@ -268,7 +332,7 @@ function frantumaUfo(ufo) {
 
 
   console.log("Frantumazione UFO");
-  const particleCount = 100; 
+  const particleCount = 200; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -310,7 +374,7 @@ function frantumaUfo(ufo) {
   score += 5;
   printScore();
  
-  const animationDuration = 1000; 
+  const animationDuration = 2000; 
   const startTimestamp = Date.now();
 
   function animateParticles() {
@@ -355,7 +419,7 @@ function frantumaUfo2(ufo2) {
 
 
   console.log("Frantumazione UFO2");
-  const particleCount = 100; 
+  const particleCount = 200; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -394,10 +458,10 @@ function frantumaUfo2(ufo2) {
     rocketLaunched = false;
   }
 
-  score += 5;
+  score += 10;
   printScore();
  
-  const animationDuration = 1000; 
+  const animationDuration = 2000; 
   const startTimestamp = Date.now();
 
   function animateParticles() {
@@ -440,7 +504,7 @@ function frantumaUfo3(ufo3) {
 
 
   console.log("Frantumazione UFO3");
-  const particleCount = 100; 
+  const particleCount = 200; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -479,10 +543,10 @@ function frantumaUfo3(ufo3) {
     rocketLaunched = false;
   }
 
-  score += 5;
+  score += 15;
   printScore();
  
-  const animationDuration = 1000; 
+  const animationDuration = 2000; 
   const startTimestamp = Date.now();
 
   function animateParticles() {
@@ -515,7 +579,93 @@ function frantumaUfo3(ufo3) {
 
 
 
+//DISTRUZIONE 4
+let ufoDestroyed4 = false;
+function frantumaUfo4(ufo4) {
 
+  if (ufoDestroyed4) {
+    return;
+  }
+  ufoDestroyed4 = true;
+
+
+  console.log("Frantumazione UFO3");
+  const particleCount = 400; 
+  const particles = new THREE.Group(); 
+
+  for (let i = 0; i < particleCount; i++) {
+    const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+    const particleMaterial = new THREE.MeshStandardMaterial({
+      color: '#ff0000', 
+      transparent: true,
+      opacity: 1.0, 
+    });
+    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+
+    particle.position.copy(ufo4.position);
+    particle.position.x += (Math.random() - 0.5) * 2;
+    particle.position.y += (Math.random() - 0.5) * 2;
+    particle.position.z += (Math.random() - 0.5) * 2;
+
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 0.5,
+      (Math.random() - 0.5) * 0.5,
+      (Math.random() - 0.5) * 0.5
+    );
+    particle.velocity = velocity;
+
+    particles.add(particle); 
+  }
+
+  scene.add(particles); 
+  scene.remove(ufoObject4); 
+
+  ufoBullets.forEach(bullet => scene.remove(bullet));
+  ufoBullets = [];
+
+  if (rocketObject) {
+    scene.remove(rocketObject);
+    rocketObject = null;
+    rocketLaunched = false;
+  }
+
+  score += 20;
+  printScore();
+ 
+  const animationDuration = 4000; 
+  const startTimestamp = Date.now();
+
+  function animateParticles() {
+    const elapsed = Date.now() - startTimestamp;
+
+    particles.children.forEach(particle => {
+      particle.position.add(particle.velocity);
+
+      const opacity = 1.0 - elapsed / animationDuration;
+      particle.material.opacity = Math.max(opacity, 0);
+
+      if (opacity <= 0) {
+        particles.remove(particle);
+      }
+    });
+
+    if (particles.children.length === 0) {
+      scene.remove(particles);
+      loadNewUfo4(); 
+    } else {
+      requestAnimationFrame(animateParticles);
+    }
+
+    
+  }
+
+  animateParticles(); 
+
+}
+
+
+
+//destro rocket
 function destroyRocket() {
   if (rocketObject) {
     scene.remove(rocketObject);
@@ -523,6 +673,10 @@ function destroyRocket() {
     rocketLaunched = false;
   }
 }
+ 
+
+
+
 
 
 
@@ -569,11 +723,21 @@ function loadNewUfo3() {
 }
 
 
+//UFO4
+function loadNewUfo4() {
 
+  if (ufoObject4) {
+    scene.remove(ufoObject4);
+    ufoObject4= null;
+  }
+
+  loadUfoObject4();
+  createRocket(); 
+}
 
 
 /////////////////////////////////////////////////////
-                      /* MOVIMENTO */
+                    /* MOVIMENTO */
 /////////////////////////////////////////////////////
 
 //MOVIMENTO 1
@@ -586,7 +750,7 @@ function startAutomaticMovement() {
   let moveRight = true; 
   let moveDown = false; 
 
-  let shootingInterval = 2000; 
+  let shootingInterval = 1900; 
   let lastShotTime = 0; 
 
   function animateUFO() {
@@ -597,7 +761,6 @@ function startAutomaticMovement() {
       ufoPositionX -= ufoHorizontalSpeed;
     }
 
-    //aggiorno
     ufoObject.position.set(ufoPositionX, ufoVerticalPositionY, 0);
 
     //controllo cambio posizione
@@ -629,6 +792,7 @@ function startAutomaticMovement() {
     requestAnimationFrame(animateUFO);
   }
 
+
   function shootBulletsUfo() {
     createBullet(ufoObject.position.clone()); 
 
@@ -655,7 +819,7 @@ function startAutomaticMovement2() {
   let moveRight = true; 
   let moveDown = false; 
 
-  let shootingInterval = 1900; 
+  let shootingInterval = 1700; 
   let lastShotTime = 0; 
 
   function animateUFO2() {
@@ -725,7 +889,7 @@ function startAutomaticMovement3() {
   let moveRight = true; 
   let moveDown = false; 
 
-  let shootingInterval = 2100; 
+  let shootingInterval = 1500; 
   let lastShotTime = 0; 
 
   function animateUFO3() {
@@ -784,6 +948,74 @@ function startAutomaticMovement3() {
   });
 }
 
+//MOVIMENTO 4
+function startAutomaticMovement4() {
+  let ufoHorizontalSpeed = 0.043; 
+  let ufoVerticalSpeed = 0.40; 
+  let ufoVerticalPositionY = 3.4;
+  let ufoPositionX = 0;  
+  let sceneWidth = 4; 
+  let moveRight = true; 
+  let moveDown = false; 
+
+  let shootingInterval = 1000; 
+  let lastShotTime = 0; 
+
+  function animateUFO4() {
+    // orizzontale 
+    if (moveRight) {
+      ufoPositionX += ufoHorizontalSpeed;
+    } else {
+      ufoPositionX -= ufoHorizontalSpeed;
+    }
+
+    //aggiorno
+    ufoObject4.position.set(ufoPositionX, ufoVerticalPositionY, 0);
+
+    //controllo cambio posizione
+    if (ufoPositionX >= sceneWidth || ufoPositionX <= -sceneWidth) {
+      moveRight = !moveRight;
+      moveDown = true;
+    }
+
+    //Verticale
+    if (moveDown) {
+      ufoVerticalPositionY -= ufoVerticalSpeed;
+      moveDown = false; 
+    }
+
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
+    }
+
+    //tempo shot
+    const currentTime = performance.now();
+    const timeSinceLastShot = currentTime - lastShotTime;
+
+    if (timeSinceLastShot >= shootingInterval) {
+      shootBulletsUfo(); 
+      lastShotTime = currentTime; 
+    }
+
+ 
+    requestAnimationFrame(animateUFO4);
+  }
+
+  function shootBulletsUfo() {
+    createBullet(ufoObject4.position.clone()); 
+
+    shootingInterval += 190; 
+  }
+
+  animateUFO4();
+
+  gsap.from(ufoObject4.position, {
+    duration: 1,
+    y: 5, 
+    ease: 'power3.out',
+   
+  });
+}
 
 /////////////////////////////////////////////////////
                     /*ROCKET */
@@ -945,11 +1177,159 @@ function checkCollision3() {
   }
 }
 
+//4
+function checkCollision4() {
+  if (rocketObject && ufoObject4 && !ufoDestroyed4) {
+    const distance = rocketObject.position.distanceTo(ufoObject4.position);
+    if (distance < 1.0) { 
+      frantumaUfo4(ufoObject4); 
+      destroyRocket();
+    }
+  }
+}
+
+//rocket-bullet
+function checkRocketCollision() {
+  if (rocketObject && ufoBullets.length > 0) {
+    for (let i = ufoBullets.length - 1; i >= 0; i--) {
+      const bullet = ufoBullets[i];
+      const distance = rocketObject.position.distanceTo(bullet.position);
+
+      if (distance < 0.7) {
+        rocketObject.visible = false; 
+        lives--;
+
+        scene.remove(bullet);
+        ufoBullets.splice(i, 1);
+
+        createHearts();
+
+        //console.log('Lives:', lives);
+        if (lives === 0) {
+         //console.log('Game over');
+          showGameOverText(); 
+          setTimeout(() => {
+            rocketObject.position.set(0, -3.5, 0);
+            rocketObject.visible = true;
+
+            if (gameOverTextEntity) {
+              scene.remove(gameOverTextEntity);
+              gameOverTextEntity.geometry.dispose();
+              gameOverTextEntity.material.dispose();
+              gameOverTextEntity = null;
+            }
+          }, 1000);
+          return;
+        }
+
+        setTimeout(() => {
+          rocketObject.position.set(0, -3.5, 0);
+          rocketObject.visible = true;
+        }, 1000);
+      }
+    }        
+  }
+}
+
+
+/////////////////////////////////////////////////////
+                      /* GAME OVER */
+/////////////////////////////////////////////////////
+let gameOverTextEntity; 
+
+function showGameOverText() {
+  if (gameOverTextEntity) {
+    scene.remove(gameOverTextEntity);
+    gameOverTextEntity.geometry.dispose();
+    gameOverTextEntity.material.dispose();
+    gameOverTextEntity = null;
+  }
+
+  const gameOverText = "GAME OVER";
+  const color = '#32cd32'; 
+
+  const geometry = new TextGeometry(gameOverText, {
+    font: font,
+    size: 0.8,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
+  });
+  geometry.center();
+
+  const material = new THREE.MeshStandardMaterial({
+    color: color,
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = -3; 
+  mesh.position.x = 0; 
+  scene.add(mesh);
+
+  gsap.from(mesh.position, { y: -10, duration: 1, ease: "elastic.out(1, 3)" });
+
+  gameOverTextEntity = mesh;
+
+  setTimeout(() => {
+    restart(); 
+  }, 3000); 
+
+}
+
+
+////////////////////////////////////////////////////////
+                       /* RESTART */
+//////////////////////////////////////////////////////
+
+function restart() {
+
+  score = 0; 
+
+  ufoBullets.forEach(bullet => scene.remove(bullet));
+  ufoBullets = [];
+
+  if (ufoObject) {
+    scene.remove(ufoObject);
+    ufoObject = null;
+  }
+  if (ufoObject2) {
+    scene.remove(ufoObject2);
+    ufoObject2 = null;
+  }
+
+  if (ufoObject3) {
+    scene.remove(ufoObject3);
+    ufoObject3 = null;
+  }
+
+  if (ufoObject4) {
+    scene.remove(ufoObject4);
+    ufoObject4 = null;
+  }
+
+  lives = 3;
+  createHearts();
+
+  rocketObject.position.set(0, -3.5, 0);
+  rocketObject.visible = true;
+
+  loadUfoObject();
+
+
+  createBullet();
+}
+
+
+
+
 
 ////////////////////////////////////////////////////////
                        /*SCORE */
 //////////////////////////////////////////////////////
-
 
 //SCORE
 let scoreEntity;
@@ -971,7 +1351,7 @@ function printScore() {
 
   const geometry = new TextGeometry((`${score}`), {
     font: font,
-    size: 1,
+    size: 0.7,
     height: 0.1,
     curveSegments: 1,
     bevelEnabled: false,
@@ -1005,7 +1385,7 @@ function printScore() {
 
   if (score >= 0 && score < 15 && currentLevel !== "LEVEL 1") {
     displayLevelText("LEVEL 1", '#ff1493', -0.5);
-    currentLevel = "LEVEL 1"; 
+    currentLevel = "LEVEL 1";  
   } else if (score >= 15 && score < 40 && currentLevel !== "LEVEL 2") {
     displayLevelText("LEVEL 2", '#ff8c00', -0.5);
     currentLevel = "LEVEL 2";
@@ -1017,14 +1397,11 @@ function printScore() {
   }else if (score >= 60 && currentLevel !== "FINAL BOSS") {
     displayLevelText("FINAL BOSS", '#ff0000', -0.5);
     currentLevel = "FINAL BOSS";
+    loadNewUfo4(); ;
   }
 }
 
-//controllo se già è in display
 function displayLevelText(levelName, color, xOffset) {
-  if (levelTextEntity && levelTextEntity.name === levelName) {
-    return; 
-  }
 
   if (levelTextEntity) {
     scene.remove(levelTextEntity);
@@ -1078,30 +1455,18 @@ function animate() {
 
   if (rocketObject) {
     updateRocketPosition();
+    checkRocketCollision();
   }
   
   if (rocketLaunched) {
     checkCollision();
     checkCollision2();
     checkCollision3();
+    checkCollision4();
 }
 
 
-  
-  if (ufoObject) {
-    ufoBullets.forEach(bullet => {
-      bullet.position.y -= 0.1;
-
-      if (bullet.position.y < -5) {
-        scene.remove(bullet);
-      }
-    });
-
-    ufoBullets = ufoBullets.filter(bullet => scene.children.includes(bullet));
-  }
-
-  
-  if (ufoObject2) {
+  if (ufoObject || ufoObject2 || ufoDestroyed3 || ufoDestroyed4) {
     ufoBullets.forEach(bullet => {
       bullet.position.y -= 0.1;
 
@@ -1114,17 +1479,7 @@ function animate() {
   }
 
 
-  if (ufoObject3) {
-    ufoBullets.forEach(bullet => {
-      bullet.position.y -= 0.1;
 
-      if (bullet.position.y < -5) {
-        scene.remove(bullet);
-      }
-    });
-
-    ufoBullets = ufoBullets.filter(bullet => scene.children.includes(bullet));
-  }
 
   controls.update(); 
   renderer.render(scene, camera);
@@ -1272,8 +1627,9 @@ function handleSpacebar() {
     ease: 'power2.out', 
     onComplete: function() {
       astroGame.remove();
-      loadUfoObject(); 
       createRocket(); 
+      loadUfoObject();
+      createHearts();
     
     }
 
