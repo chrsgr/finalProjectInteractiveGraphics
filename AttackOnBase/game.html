@@ -44,6 +44,13 @@
   <p class="textAfter" id="textAfter" style="opacity: 0;">Push SPACE button to START the game. </p>
 
 
+  
+<!--  WIN -->
+  <img id="winAstro" src="win.png"  class="win">
+  <p class="textWin" id="textWin" style="opacity: 0;">Intergalactic Governor thank you for freeing us from enemies!</p>
+  <p class="textWinAfter" id="textWinAfter" style="opacity: 0;">Intergalactic Governor thank you for freeing us from enemies!See you soon!</p>
+
+
   </body>
   </html>
   
@@ -87,6 +94,24 @@ body {
         }
     });
 
+
+
+
+
+    //WIN
+    gsap.to(textWin, { opacity: 1, duration: 2, delay: 2 }); //compare dopo 2 secondi
+    gsap.to(textWin, { opacity: 0, duration: 2, delay: 3 }); //resta per 5 secondi
+
+
+    //SECONDA FRASE
+    gsap.to(textWinAfter, { opacity: 1, duration: 2, delay: 7 }); //compare dopo 2 secondi della frase precedente
+    gsap.to(textWinAfter, { opacity: 0, duration: 2, delay: 3}); //resta per 5 secondi
+
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space') {
+            gsap.to(textWin, { opacity: 0, duration: 1 });
+        }
+    });
 
 
 

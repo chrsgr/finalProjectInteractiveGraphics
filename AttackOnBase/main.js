@@ -1,12 +1,9 @@
 /*
 COSE ANOCRA DA FARE: 
--luci  quando entra il boss
 -pulsanti start/stop
--aggiugnere vignetta boss finale
 -power up
-- aggiustare velocità movimemento ufo
 -aggiungere timer
--barra di vita ufo4
+-ombre e cambio luci
 */
 
 import './style.css';
@@ -123,6 +120,7 @@ scene.add(pointLight);
 
 
 
+
 /////////////////////////////////////////////////////
                       /* VITE */
 /////////////////////////////////////////////////////
@@ -146,6 +144,29 @@ function createHearts() {
     hearts.push(razzo); 
   }
 }
+
+
+
+/////////////////////////////////////////////////////
+                      /* POWER-UP */
+/////////////////////////////////////////////////////
+
+//TO-DO LOGICA COLLISIONE
+let powerUps = [];
+
+function createPowerUp() {
+  const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+  const material = new THREE.MeshBasicMaterial({ color: '#ff4500' });
+  const powerUp = new THREE.Mesh(geometry, material);
+
+  const randomX = (Math.random() - 0.5) * 10; 
+  powerUp.position.set(randomX, 4, 0);
+
+  scene.add(powerUp);
+
+  powerUps.push(powerUp);
+}
+
 
 
 /////////////////////////////////////////////////////
@@ -292,7 +313,7 @@ function loadUfoObject4() {
 
             ufoDestroyed4 = false;
         
-
+          printHealth();
           startAutomaticMovement4();
       });
   }, undefined, function(error) {
@@ -312,6 +333,147 @@ function createBullet(position) {
   bullet.position.copy(position);
   scene.add(bullet);
   ufoBullets.push(bullet);
+}
+
+
+
+
+/////////////////////////////////////////////////////
+                   /*HEALTH BAR*/
+/////////////////////////////////////////////////////
+
+let healthEntity;
+let health = 100;
+let healthGroup;
+let healthTextEntity = null;
+
+function printHealth() {
+  if (!font) {
+    return;
+  }
+
+  if (healthEntity) {
+    scene.remove(healthEntity);
+    healthEntity.geometry.dispose();
+    healthEntity.material.dispose();
+  }
+
+  const geometry = new TextGeometry((`BOSS: ${health}%`), {
+    color: '#dc143c',
+    font: font,
+    size: 0.3,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
+  });
+  geometry.center();
+
+  const material = new THREE.MeshStandardMaterial({
+    color: '#dc143c',
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+
+  mesh.rotation.y = Math.PI / 2;
+  mesh.position.y = -1.5;
+  mesh.position.x = -5;
+
+  if (!healthGroup) {
+    healthGroup = new THREE.Group();
+    scene.add(healthGroup);
+  }
+
+  scene.add(mesh);
+  healthEntity = mesh;
+
+  if (score >= 60 && currentLevel !== "FINAL BOSS") {
+    displayHealthText("Health: ", '#dc143c', -0.5);
+    loadNewUfo4(); ;
+  }
+}
+
+function displayHealthText(healthName, xOffset) {
+
+  if (healthTextEntity) {
+    scene.remove(healthTextEntity);
+    healthTextEntity.geometry.dispose();
+    healthTextEntity.material.dispose();
+  }
+
+  const healthGeometry = new TextGeometry(healthName, {
+    color: '#dc143c',
+    font: font,
+    size: 0.5,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
+  });
+  healthGeometry.center();
+
+  const healthMaterial = new THREE.MeshStandardMaterial({
+    color: '#dc143c',
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const healthMesh = new THREE.Mesh(healthGeometry, healthMaterial);
+  healthMesh.position.y = 3;
+  healthMesh.position.x = xOffset;
+  healthMesh.name = healthName;
+
+  scene.add(healthMesh);
+  healthTextEntity = healthMesh;
+
+  setTimeout(() => {
+    if (healthTextEntity === healthMesh) {
+      scene.remove(healthTextEntity);
+      healthTextEntity.geometry.dispose();
+      healthTextEntity.material.dispose();
+      healthTextEntity = null;
+    }
+  }, 3000); 
+}
+
+
+
+function updateHealthText() {
+  if (healthEntity) {
+    healthEntity.geometry.dispose();
+    healthEntity.material.dispose();
+    scene.remove(healthEntity);
+  }
+
+  const geometry = new TextGeometry(`BOSS: ${health}%`, {
+    font: font,
+    size: 0.3,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
+  });
+  geometry.center();
+
+  const material = new THREE.MeshStandardMaterial({
+    color: '#dc143c',
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+
+  mesh.rotation.y = Math.PI / 2;
+  mesh.position.y = -1.5;
+  mesh.position.x = -5;
+
+  scene.add(mesh);
+  healthEntity = mesh;
 }
 
 
@@ -578,31 +740,123 @@ function frantumaUfo3(ufo3) {
 }
 
 
-
 //DISTRUZIONE 4
 let ufoDestroyed4 = false;
-function frantumaUfo4(ufo4) {
 
+function frantumaUfo4(ufo4) {
   if (ufoDestroyed4) {
     return;
   }
-  ufoDestroyed4 = true;
+
+  health -= 25; 
+  let scaleFactor = 0.8; 
+  ufoObject4.scale.multiplyScalar(scaleFactor);
+
+  updateHealthText();
+
+  if (health <= 0) {
+    ufoDestroyed4 = true;
+
+    scene.remove(ufoObject);
+    scene.remove(ufoObject2);
+    scene.remove(ufoObject3);
+    scene.remove(ufoObject4);
+    scene.remove (ufoBullets); 
 
 
-  console.log("Frantumazione UFO3");
-  const particleCount = 400; 
-  const particles = new THREE.Group(); 
+    console.log("Frantumazione UFO4");
+
+    const particleCount = 400;
+    const particles = new THREE.Group();
+
+    for (let i = 0; i < particleCount; i++) {
+      const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+      const particleMaterial = new THREE.MeshStandardMaterial({
+        color: '#ff0000',
+        transparent: true,
+        opacity: 1.0,
+      });
+      const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+
+      particle.position.copy(ufo4.position);
+      particle.position.x += (Math.random() - 0.5) * 2;
+      particle.position.y += (Math.random() - 0.5) * 2;
+      particle.position.z += (Math.random() - 0.5) * 2;
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5) * 0.5
+      );
+      particle.velocity = velocity;
+
+      particles.add(particle);
+    }
+
+    scene.add(particles);
+    scene.remove(ufoObject4);
+    ufoBullets.forEach(bullet => scene.remove(bullet));
+    ufoBullets = [];
+
+    if (rocketObject) {
+      scene.remove(rocketObject);
+      rocketObject = null;
+      rocketLaunched = false;
+    }
+
+    score += 20;
+    printScore();
+
+    const animationDuration = 4000;
+    const startTimestamp = Date.now();
+
+    function animateParticles() {
+      const elapsed = Date.now() - startTimestamp;
+
+      particles.children.forEach(particle => {
+        particle.position.add(particle.velocity);
+
+        const opacity = 1.0 - elapsed / animationDuration;
+        particle.material.opacity = Math.max(opacity, 0);
+
+        if (opacity <= 0) {
+          particles.remove(particle);
+        }
+      });
+
+      if (particles.children.length === 0) {
+        scene.remove(particles);
+        scene.remove (ufoBullets); 
+        displayWinText();
+        
+      } else {
+        requestAnimationFrame(animateParticles);
+      }
+    }
+
+    animateParticles();
+  }
+
+}
+
+
+//ROCKET
+function frantumaRocket(rocket) {
+  //console.log("Frantumazione Rocket");
+
+  const particleCount = 400;
+  const particles = new THREE.Group();
 
   for (let i = 0; i < particleCount; i++) {
     const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
     const particleMaterial = new THREE.MeshStandardMaterial({
-      color: '#ff0000', 
+      color: '#da70d6',
       transparent: true,
-      opacity: 1.0, 
+      opacity: 1.0,
     });
     const particle = new THREE.Mesh(particleGeometry, particleMaterial);
 
-    particle.position.copy(ufo4.position);
+    particle.position.copy(rocket.position);
     particle.position.x += (Math.random() - 0.5) * 2;
     particle.position.y += (Math.random() - 0.5) * 2;
     particle.position.z += (Math.random() - 0.5) * 2;
@@ -614,12 +868,11 @@ function frantumaUfo4(ufo4) {
     );
     particle.velocity = velocity;
 
-    particles.add(particle); 
+    particles.add(particle);
   }
 
-  scene.add(particles); 
-  scene.remove(ufoObject4); 
-
+  scene.add(particles);
+  scene.remove(rocket);
   ufoBullets.forEach(bullet => scene.remove(bullet));
   ufoBullets = [];
 
@@ -629,10 +882,7 @@ function frantumaUfo4(ufo4) {
     rocketLaunched = false;
   }
 
-  score += 20;
-  printScore();
- 
-  const animationDuration = 4000; 
+  const animationDuration = 2000;
   const startTimestamp = Date.now();
 
   function animateParticles() {
@@ -651,17 +901,15 @@ function frantumaUfo4(ufo4) {
 
     if (particles.children.length === 0) {
       scene.remove(particles);
-      loadNewUfo4(); 
+      createRocket(); 
     } else {
       requestAnimationFrame(animateParticles);
     }
-
-    
   }
 
-  animateParticles(); 
-
+  animateParticles();
 }
+
 
 
 
@@ -1112,6 +1360,7 @@ function updateRocketPosition() {
 }
 
 //lanciare
+//TO-DO: CONTROLLARE
 document.addEventListener('keydown', function (event) {
   if (event.key === 'A' || event.key === 'a') {
     moveRocket();
@@ -1140,9 +1389,6 @@ document.addEventListener('keyup', function (event) {
 /////////////////////////////////////////////////////
                     /*COLLISION */
 ////////////////////////////////////////////////////
-
-
-
 
 //1
 function checkCollision() {
@@ -1184,11 +1430,13 @@ function checkCollision4() {
     if (distance < 1.0) { 
       frantumaUfo4(ufoObject4); 
       destroyRocket();
+      createRocket(); 
+
     }
   }
 }
 
-//rocket-bullet
+ //rocket-bullet
 function checkRocketCollision() {
   if (rocketObject && ufoBullets.length > 0) {
     for (let i = ufoBullets.length - 1; i >= 0; i--) {
@@ -1198,6 +1446,7 @@ function checkRocketCollision() {
       if (distance < 0.7) {
         rocketObject.visible = false; 
         lives--;
+        frantumaRocket(rocketObject); 
 
         scene.remove(bullet);
         ufoBullets.splice(i, 1);
@@ -1231,7 +1480,7 @@ function checkRocketCollision() {
   }
 }
 
-
+ 
 /////////////////////////////////////////////////////
                       /* GAME OVER */
 /////////////////////////////////////////////////////
@@ -1275,19 +1524,80 @@ function showGameOverText() {
   gameOverTextEntity = mesh;
 
   setTimeout(() => {
-    restart(); 
+    restartGame(); 
   }, 3000); 
 
 }
 
+
+/////////////////////////////////////////////////////
+                      /* WIN */
+/////////////////////////////////////////////////////
+function displayWinText() {
+  var winAstro = document.getElementById('winAstro');
+  var textWinAfter = document.getElementById('textWinAfter');
+  var textWin = document.getElementById('textWin');
+  const smoke = document.createElement('div');
+  smoke.classList.add('smoke');
+
+  winAstro.parentNode.insertBefore(smoke, winAstro.nextSibling);
+
+  gsap.to(smoke, {
+    height: '100%',
+    width: '10%',
+    opacity: 1,
+    y: '100%',
+    duration: 1.7,
+    ease: 'power3.out',
+  });
+
+  gsap.to(winAstro, {
+    y: '-100%',
+    x: '50%',
+    duration: 1.7,
+    ease: 'power3.out',
+    onStart: function() {
+      winAstro.style.display = 'block'; 
+      textWin.style.display = 'block'
+      textWinAfter.style.display = 'block'; 
+    },
+    onComplete: function() {
+      gsap.to(winAstro, {
+        y: 0,
+        x: 0,
+        duration: 1.7,
+        ease: 'power3.out',
+        onComplete: function() {
+          smoke.remove();
+          setTimeout(function() {
+            winAstro.remove(); 
+            textWin.remove(); 
+            textWinAfter.remove(); 
+          }, 3000);
+        }
+      });
+    }
+  });
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'R' || event.key === 'r') {
+    restart();
+  }
+});
 
 ////////////////////////////////////////////////////////
                        /* RESTART */
 //////////////////////////////////////////////////////
 
 function restart() {
+  
+  health = 100;
+  printHealth();
 
   score = 0; 
+  printScore(); 
+ 
 
   ufoBullets.forEach(bullet => scene.remove(bullet));
   ufoBullets = [];
@@ -1324,7 +1634,46 @@ function restart() {
 }
 
 
+//QUANDO DI PERDE
+function restartGame() { 
+  
+   score = 0; 
+  printScore(); 
+ 
 
+  ufoBullets.forEach(bullet => scene.remove(bullet));
+  ufoBullets = [];
+
+  if (ufoObject) {
+    scene.remove(ufoObject);
+    ufoObject = null;
+  }
+  if (ufoObject2) {
+    scene.remove(ufoObject2);
+    ufoObject2 = null;
+  }
+
+  if (ufoObject3) {
+    scene.remove(ufoObject3);
+    ufoObject3 = null;
+  }
+
+  if (ufoObject4) {
+    scene.remove(ufoObject4);
+    ufoObject4 = null;
+  }
+
+  lives = 3;
+  createHearts();
+
+  rocketObject.position.set(0, -3.5, 0);
+  rocketObject.visible = true;
+
+  loadUfoObject();
+
+
+  createBullet();
+}
 
 
 ////////////////////////////////////////////////////////
@@ -1397,7 +1746,8 @@ function printScore() {
   }else if (score >= 60 && currentLevel !== "FINAL BOSS") {
     displayLevelText("FINAL BOSS", '#ff0000', -0.5);
     currentLevel = "FINAL BOSS";
-    loadNewUfo4(); ;
+    loadNewUfo4();
+    displayHealthText();
   }
 }
 
@@ -1489,13 +1839,12 @@ function animate() {
 animate();
 
 
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+                      /*START/PAUSE*/
+/////////////////////////////////////////////////////
 
 //START-STOP
+//TO-DO IMPLEMEMNTARE LOGICHE
 document.addEventListener('DOMContentLoaded', function () {
   const startButton = document.getElementById('startButton');
   startButton.addEventListener('click', startGame);
@@ -1569,6 +1918,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const istruImg = document.getElementById('istru');
   istruImg.addEventListener('click', goToIstruction);
 });
+
+
 
 
 window.onload = function() {
