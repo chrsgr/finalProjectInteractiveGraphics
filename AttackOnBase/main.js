@@ -1256,7 +1256,6 @@ function moveRocket() {
     ease: 'power2.out',
     onComplete: () => {
       if (!rocketObject) {
-       //console.error('rocketObject is null or undefined during onComplete');
         return;
       }
       rocketObject.position.y = -3.5;
@@ -1289,7 +1288,6 @@ function updateRocketPosition() {
 }
 
 //lanciare
-//TO-DO: CONTROLLARE
 document.addEventListener('keydown', function (event) {
   if (event.key === 'A' || event.key === 'a') {
     
@@ -1704,7 +1702,7 @@ function restart() {
 }
 
 
-//QUANDO DI PERDE
+//QUANDO SI PERDE DURANTE IL GIOCO
 function restartGame() { 
   
   score = 0; 
@@ -1867,7 +1865,7 @@ function animate() {
 
   if (rocketObject) {
     updateRocketPosition();
-    //checkRocketCollision();
+    checkRocketCollision();
     checkPowerUpCollision(); 
 
   }
