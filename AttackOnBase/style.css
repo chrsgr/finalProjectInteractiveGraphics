@@ -33,25 +33,7 @@ body, html {
   top: 30px; 
 }
 
-.start-image {
-  position: absolute;
-  width: 35px;
-  height: auto;
-  top: 30px; 
-  left: 60px;
-  cursor: pointer; 
 
-}
-
-.stop-image {
-  position: absolute;
-  width: 35px; 
-  height: 35px;
-  top: 30px; 
-  left: 30px;
-  cursor: pointer; 
-
-}
 
 .startHome{
   position: absolute;

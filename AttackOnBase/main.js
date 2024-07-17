@@ -1,10 +1,3 @@
-/*
-COSE ANOCRA DA FARE: 
--pulsanti start/stop
--power up
--aggiungere timer
--ombre e cambio luci
-*/
 
 import './style.css';
 import * as THREE from 'three';
@@ -120,7 +113,6 @@ scene.add(pointLight);
 
 
 
-
 /////////////////////////////////////////////////////
                       /* VITE */
 /////////////////////////////////////////////////////
@@ -146,26 +138,6 @@ function createHearts() {
 }
 
 
-
-/////////////////////////////////////////////////////
-                      /* POWER-UP */
-/////////////////////////////////////////////////////
-
-//TO-DO LOGICA COLLISIONE
-let powerUps = [];
-
-function createPowerUp() {
-  const geometry = new THREE.SphereGeometry(0.05, 16, 16);
-  const material = new THREE.MeshBasicMaterial({ color: '#ff4500' });
-  const powerUp = new THREE.Mesh(geometry, material);
-
-  const randomX = (Math.random() - 0.5) * 10; 
-  powerUp.position.set(randomX, 4, 0);
-
-  scene.add(powerUp);
-
-  powerUps.push(powerUp);
-}
 
 
 
@@ -196,6 +168,9 @@ function loadUfoObject() {
           const light = new THREE.PointLight('#ff00ff', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object.add(light); 
+
+          object.castShadow = true;
+
 
             ufoDestroyed = false;
         
@@ -232,6 +207,8 @@ function loadUfoObject2() {
           const light = new THREE.PointLight('#ff8c00', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object2.add(light); 
+          
+          object2.castShadow = true;
 
             ufoDestroyed2 = false;
         
@@ -269,6 +246,8 @@ function loadUfoObject3() {
           const light = new THREE.PointLight('#00ffff', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object3.add(light); 
+
+          object3.castShadow = true;
 
             ufoDestroyed3 = false;
         
@@ -310,6 +289,7 @@ function loadUfoObject4() {
           const light = new THREE.PointLight('#ff0000', 10, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object4.add(light); 
+          object4.castShadow = true;
 
             ufoDestroyed4 = false;
         
@@ -342,24 +322,25 @@ function createBullet(position) {
                    /*HEALTH BAR*/
 /////////////////////////////////////////////////////
 
-let healthEntity;
-let health = 100;
-let healthGroup;
-let healthTextEntity = null;
+let healthEntity; 
+let health = 100; 
 
 function printHealth() {
   if (!font) {
     return;
   }
 
+ 
   if (healthEntity) {
     scene.remove(healthEntity);
-    healthEntity.geometry.dispose();
+
+
+    healthEntity.geometry.dispose(); 
     healthEntity.material.dispose();
   }
 
-  const geometry = new TextGeometry((`BOSS: ${health}%`), {
-    color: '#dc143c',
+  //SCORE
+  const geometry = new TextGeometry(`BOSS: ${health}%`, { 
     font: font,
     size: 0.3,
     height: 0.1,
@@ -368,112 +349,44 @@ function printHealth() {
   });
   geometry.center();
 
-  const material = new THREE.MeshStandardMaterial({
+  const material = new THREE.MeshStandardMaterial({  
     color: '#dc143c',
     roughness: 0.5,
     metalness: 0.1,
     transparent: true,
     opacity: 1,
-  });
-
+});
   const mesh = new THREE.Mesh(geometry, material);
-
+    
+  
   mesh.rotation.y = Math.PI / 2;
   mesh.position.y = -1.5;
   mesh.position.x = -5;
 
-  if (!healthGroup) {
-    healthGroup = new THREE.Group();
-    scene.add(healthGroup);
-  }
 
-  scene.add(mesh);
+  mesh.castShadow = true;
+  
   healthEntity = mesh;
 
-  if (score >= 60 && currentLevel !== "FINAL BOSS") {
-    displayHealthText("Health: ", '#dc143c', -0.5);
-    loadNewUfo4(); ;
-  }
-}
+  scene.add(healthEntity);
 
-function displayHealthText(healthName, xOffset) {
 
-  if (healthTextEntity) {
-    scene.remove(healthTextEntity);
-    healthTextEntity.geometry.dispose();
-    healthTextEntity.material.dispose();
-  }
-
-  const healthGeometry = new TextGeometry(healthName, {
-    color: '#dc143c',
-    font: font,
-    size: 0.5,
-    height: 0.1,
-    curveSegments: 1,
-    bevelEnabled: false,
-  });
-  healthGeometry.center();
-
-  const healthMaterial = new THREE.MeshStandardMaterial({
-    color: '#dc143c',
-    roughness: 0.5,
-    metalness: 0.1,
-    transparent: true,
-    opacity: 1,
-  });
-
-  const healthMesh = new THREE.Mesh(healthGeometry, healthMaterial);
-  healthMesh.position.y = 3;
-  healthMesh.position.x = xOffset;
-  healthMesh.name = healthName;
-
-  scene.add(healthMesh);
-  healthTextEntity = healthMesh;
-
-  setTimeout(() => {
-    if (healthTextEntity === healthMesh) {
-      scene.remove(healthTextEntity);
-      healthTextEntity.geometry.dispose();
-      healthTextEntity.material.dispose();
-      healthTextEntity = null;
+  // Animazione GSAP
+  healthEntity= gsap.to(mesh.scale, {
+    x: 2,
+    y: -1.2,
+    z: 1.2,
+    duration: 0.5, 
+    ease: 'power2.out', 
+    yoyo: true, 
+    repeat: 1,
+    onComplete: function() {
+      if (healthEntity) {
+        scene.remove(healthEntity);
+      }
+      healthEntity = mesh;
     }
-  }, 3000); 
-}
-
-
-
-function updateHealthText() {
-  if (healthEntity) {
-    healthEntity.geometry.dispose();
-    healthEntity.material.dispose();
-    scene.remove(healthEntity);
-  }
-
-  const geometry = new TextGeometry(`BOSS: ${health}%`, {
-    font: font,
-    size: 0.3,
-    height: 0.1,
-    curveSegments: 1,
-    bevelEnabled: false,
   });
-  geometry.center();
-
-  const material = new THREE.MeshStandardMaterial({
-    color: '#dc143c',
-    roughness: 0.5,
-    metalness: 0.1,
-    transparent: true,
-    opacity: 1,
-  });
-
-  const mesh = new THREE.Mesh(geometry, material);
-
-  mesh.rotation.y = Math.PI / 2;
-  mesh.position.y = -1.5;
-  mesh.position.x = -5;
-
-  scene.add(mesh);
-  healthEntity = mesh;
 }
 
 
@@ -494,7 +407,7 @@ function frantumaUfo(ufo) {
 
 
   console.log("Frantumazione UFO");
-  const particleCount = 200; 
+  const particleCount = 100; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -524,8 +437,12 @@ function frantumaUfo(ufo) {
   scene.add(particles); 
   scene.remove(ufo); 
 
-  ufoBullets.forEach(bullet => scene.remove(bullet));
-  ufoBullets = [];
+
+ ufoBullets.forEach(bullet => {
+  scene.remove(bullet);
+});
+ufoBullets = [];
+
 
   if (rocketObject) {
     scene.remove(rocketObject);
@@ -555,7 +472,7 @@ function frantumaUfo(ufo) {
 
     if (particles.children.length === 0) {
       scene.remove(particles);
-      loadNewUfo(); 
+     loadNewUfo(); 
     } else {
       requestAnimationFrame(animateParticles);
     }
@@ -581,7 +498,7 @@ function frantumaUfo2(ufo2) {
 
 
   console.log("Frantumazione UFO2");
-  const particleCount = 200; 
+  const particleCount = 100; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -611,8 +528,11 @@ function frantumaUfo2(ufo2) {
   scene.add(particles); 
   scene.remove(ufoObject2); 
 
-  ufoBullets.forEach(bullet => scene.remove(bullet));
-  ufoBullets = [];
+ // Rimuovi i proiettili
+ ufoBullets.forEach(bullet => {
+  scene.remove(bullet);
+});
+ufoBullets = [];
 
   if (rocketObject) {
     scene.remove(rocketObject);
@@ -666,7 +586,7 @@ function frantumaUfo3(ufo3) {
 
 
   console.log("Frantumazione UFO3");
-  const particleCount = 200; 
+  const particleCount = 100; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -696,8 +616,12 @@ function frantumaUfo3(ufo3) {
   scene.add(particles); 
   scene.remove(ufoObject3); 
 
-  ufoBullets.forEach(bullet => scene.remove(bullet));
+  // Rimuovi i proiettili
+  ufoBullets.forEach(bullet => {
+    scene.remove(bullet);
+  });
   ufoBullets = [];
+
 
   if (rocketObject) {
     scene.remove(rocketObject);
@@ -749,10 +673,11 @@ function frantumaUfo4(ufo4) {
   }
 
   health -= 25; 
+  printHealth(); 
+
   let scaleFactor = 0.8; 
   ufoObject4.scale.multiplyScalar(scaleFactor);
 
-  updateHealthText();
 
   if (health <= 0) {
     ufoDestroyed4 = true;
@@ -761,7 +686,14 @@ function frantumaUfo4(ufo4) {
     scene.remove(ufoObject2);
     scene.remove(ufoObject3);
     scene.remove(ufoObject4);
-    scene.remove (ufoBullets); 
+    scene.remove (rocketObject);
+  ufoBullets.forEach(bullet => {
+    scene.remove(bullet);
+  });
+  ufoBullets = [];
+
+   displayWinText();
+
 
 
     console.log("Frantumazione UFO4");
@@ -827,7 +759,6 @@ function frantumaUfo4(ufo4) {
       if (particles.children.length === 0) {
         scene.remove(particles);
         scene.remove (ufoBullets); 
-        displayWinText();
         
       } else {
         requestAnimationFrame(animateParticles);
@@ -971,19 +902,6 @@ function loadNewUfo3() {
 }
 
 
-//UFO4
-function loadNewUfo4() {
-
-  if (ufoObject4) {
-    scene.remove(ufoObject4);
-    ufoObject4= null;
-  }
-
-  loadUfoObject4();
-  createRocket(); 
-}
-
-
 /////////////////////////////////////////////////////
                     /* MOVIMENTO */
 /////////////////////////////////////////////////////
@@ -1023,8 +941,9 @@ function startAutomaticMovement() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -5) {
-      ufoVerticalPositionY = 3; 
+    if (ufoVerticalPositionY <= -2) {
+      showGameOverText();
+      return; 
     }
 
     //tempo shot
@@ -1093,8 +1012,9 @@ function startAutomaticMovement2() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -5) {
-      ufoVerticalPositionY = 3; 
+    if (ufoVerticalPositionY <= -2) {
+      showGameOverText();
+      return; 
     }
 
     //tempo shot
@@ -1163,8 +1083,9 @@ function startAutomaticMovement3() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -5) {
-      ufoVerticalPositionY = 3; 
+    if (ufoVerticalPositionY <= -2) {
+      showGameOverText();
+      return; 
     }
 
     //tempo shot
@@ -1232,8 +1153,9 @@ function startAutomaticMovement4() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -5) {
-      ufoVerticalPositionY = 3; 
+    if (ufoVerticalPositionY <= -2) {
+      showGameOverText();
+      return; 
     }
 
     //tempo shot
@@ -1321,7 +1243,10 @@ function createRocket() {
 
 let rocketLaunched = false;
 function moveRocket() {
-  if (!rocketObject) return;
+  if (!rocketObject) {
+    //console.error('rocketObject is null or undefined');
+    return;
+  }
 
   rocketLaunched = true; 
 
@@ -1330,12 +1255,16 @@ function moveRocket() {
     duration: 2,
     ease: 'power2.out',
     onComplete: () => {
+      if (!rocketObject) {
+       //console.error('rocketObject is null or undefined during onComplete');
+        return;
+      }
       rocketObject.position.y = -3.5;
       rocketLaunched = false; 
-
     }
   });
 }
+
 
 
 //spostamento orizzontale
@@ -1363,6 +1292,7 @@ function updateRocketPosition() {
 //TO-DO: CONTROLLARE
 document.addEventListener('keydown', function (event) {
   if (event.key === 'A' || event.key === 'a') {
+    
     moveRocket();
   } else if (!rocketLaunched) { 
     if (event.key === 'ArrowLeft') {
@@ -1382,6 +1312,129 @@ document.addEventListener('keyup', function (event) {
     }
   }
 });
+
+/////////////////////////////////////////////////////
+                      /* POWERUP*/
+/////////////////////////////////////////////////////
+let powerUps = [];
+let fallSpeed = 0.02;
+let shootingInterval = 1000; 
+let lastShotTime = 0;
+let isImmortal = false;
+
+const xmin = -4;  //limite sinistro
+const xmax = 4;   //limite destro
+const ymax = 5;    //limite superiore
+
+function getRandomPosition() {
+  const randomX = Math.random() * (xmax - xmin) + xmin;
+  return new THREE.Vector3(randomX, ymax, 0); 
+
+}
+
+function createPowerUp() {
+  const position = getRandomPosition();
+  const geometry = new THREE.SphereGeometry(0.1, 40, 40);
+  const material = new THREE.MeshBasicMaterial({ color: '#ff00ff' });
+  const powerUp = new THREE.Mesh(geometry, material);
+  powerUp.position.copy(position);
+  scene.add(powerUp);
+  powerUps.push(powerUp);
+}
+
+function startAutomaticMovementPowerUp() {
+  const currentTime = performance.now();
+  const timeSinceLastShot = currentTime - lastShotTime;
+
+  if (timeSinceLastShot >= shootingInterval) {
+    shootPowerUp(); 
+    lastShotTime = currentTime; 
+  }
+
+  movePowerUps(); 
+
+  checkPowerUpCollision(); 
+  requestAnimationFrame(startAutomaticMovementPowerUp);
+}
+
+function shootPowerUp() {
+  createPowerUp();
+  shootingInterval += 20000;
+}
+
+function movePowerUps() {
+  for (let i = 0; i < powerUps.length; i++) {
+    const powerUp = powerUps[i];
+    powerUp.position.y -= fallSpeed; 
+  }
+}
+
+function checkPowerUpCollision() {
+  if (rocketObject == null) {
+    return;
+  }
+
+  if (rocketObject && powerUps.length > 0) {
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+      const powerUp = powerUps[i];
+      const distance = rocketObject.position.distanceTo(powerUp.position);
+
+      if (distance <= 1) {
+        becomeImmortal(rocketObject);
+        scene.remove(powerUp);
+        powerUps.splice(i, 1); 
+      }        
+    }
+  }
+}
+
+
+function becomeImmortal(rocketObject) {
+
+  isImmortal = true;
+  const bodyGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 35);
+  const bodyMaterial = new THREE.MeshPhongMaterial({ color: 	'#ffd700' });
+  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+  body.position.y = 0.5;
+  rocketObject.add(body);
+
+  //Punta 
+  const coneGeometry = new THREE.ConeGeometry(0.15, 0.3, 36);
+  const coneMaterial = new THREE.MeshPhongMaterial({ color: '#000000' });
+  const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+  cone.position.y = 1.15;
+  rocketObject.add(cone);
+
+  //Ali
+  const wingGeometry = new THREE.BoxGeometry(0.05, 0.3, 0.1);
+  const wingMaterial = new THREE.MeshPhongMaterial({ color: '#000000' });
+
+  const wing1 = new THREE.Mesh(wingGeometry, wingMaterial);
+  wing1.position.set(0.15, 0, 0);
+  rocketObject.add(wing1);
+
+  const wing2 = wing1.clone();
+  wing2.position.set(-0.15, 0, 0);
+  rocketObject.add(wing2);
+
+  const wing3 = wing1.clone();
+  wing3.position.set(0, 0, 0.15);
+  wing3.rotation.y = Math.PI / 2;
+  rocketObject.add(wing3);
+
+  const wing4 = wing3.clone();
+  wing4.position.set(0, 0, -0.15);
+  rocketObject.add(wing4);
+
+  setTimeout(() => {
+    isImmortal = false;
+  }, 10000); 
+}
+
+
+
+
+
 
 
 
@@ -1437,13 +1490,17 @@ function checkCollision4() {
 }
 
  //rocket-bullet
-function checkRocketCollision() {
+ function checkRocketCollision() {
+  if (rocketObject == null || isImmortal) {
+    return; 
+  }
+
   if (rocketObject && ufoBullets.length > 0) {
     for (let i = ufoBullets.length - 1; i >= 0; i--) {
       const bullet = ufoBullets[i];
       const distance = rocketObject.position.distanceTo(bullet.position);
 
-      if (distance < 0.7) {
+      if (distance <= 1) {
         rocketObject.visible = false; 
         lives--;
         frantumaRocket(rocketObject); 
@@ -1455,7 +1512,7 @@ function checkRocketCollision() {
 
         //console.log('Lives:', lives);
         if (lives === 0) {
-         //console.log('Game over');
+          //console.log('Game over');
           showGameOverText(); 
           setTimeout(() => {
             rocketObject.position.set(0, -3.5, 0);
@@ -1480,6 +1537,10 @@ function checkRocketCollision() {
   }
 }
 
+
+
+
+
  
 /////////////////////////////////////////////////////
                       /* GAME OVER */
@@ -1495,7 +1556,7 @@ function showGameOverText() {
   }
 
   const gameOverText = "GAME OVER";
-  const color = '#32cd32'; 
+  const color = '#dc143c'; 
 
   const geometry = new TextGeometry(gameOverText, {
     font: font,
@@ -1524,7 +1585,8 @@ function showGameOverText() {
   gameOverTextEntity = mesh;
 
   setTimeout(() => {
-    restartGame(); 
+    scene.remove(gameOverTextEntity);
+    restartGame();
   }, 3000); 
 
 }
@@ -1586,6 +1648,13 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'G' || event.key === 'g') {
+    restartGame();
+  }
+});
+
 ////////////////////////////////////////////////////////
                        /* RESTART */
 //////////////////////////////////////////////////////
@@ -1594,6 +1663,7 @@ function restart() {
   
   health = 100;
   printHealth();
+  
 
   score = 0; 
   printScore(); 
@@ -1637,43 +1707,36 @@ function restart() {
 //QUANDO DI PERDE
 function restartGame() { 
   
-   score = 0; 
-  printScore(); 
- 
-
-  ufoBullets.forEach(bullet => scene.remove(bullet));
-  ufoBullets = [];
-
-  if (ufoObject) {
-    scene.remove(ufoObject);
-    ufoObject = null;
-  }
-  if (ufoObject2) {
-    scene.remove(ufoObject2);
-    ufoObject2 = null;
-  }
-
-  if (ufoObject3) {
-    scene.remove(ufoObject3);
-    ufoObject3 = null;
-  }
-
-  if (ufoObject4) {
-    scene.remove(ufoObject4);
-    ufoObject4 = null;
-  }
-
-  lives = 3;
-  createHearts();
-
-  rocketObject.position.set(0, -3.5, 0);
-  rocketObject.visible = true;
-
-  loadUfoObject();
+  score = 0; 
+ printScore(); 
 
 
-  createBullet();
+ ufoBullets.forEach(bullet => scene.remove(bullet));
+ ufoBullets = [];
+
+ if (ufoObject) {
+   scene.remove(ufoObject);
+   ufoObject = null;
+ }
+
+ if (ufoObject4) {
+   scene.remove(ufoObject4);
+   ufoObject4 = null;
+ }
+
+ lives = 3;
+ createHearts();
+
+ rocketObject.position.set(0, -3.5, 0);
+ rocketObject.visible = true;
+
+ loadUfoObject();
+
+
+ createBullet();
 }
+
+
 
 
 ////////////////////////////////////////////////////////
@@ -1732,22 +1795,21 @@ function printScore() {
   scene.add(mesh);
   scoreEntity = mesh;
 
-  if (score >= 0 && score < 15 && currentLevel !== "LEVEL 1") {
+  if (score >= 0 && score < 10 && currentLevel !== "LEVEL 1") {
     displayLevelText("LEVEL 1", '#ff1493', -0.5);
     currentLevel = "LEVEL 1";  
-  } else if (score >= 15 && score < 40 && currentLevel !== "LEVEL 2") {
+  } else if (score >= 10 && score < 20 && currentLevel !== "LEVEL 2") {
     displayLevelText("LEVEL 2", '#ff8c00', -0.5);
     currentLevel = "LEVEL 2";
     loadUfoObject2(); 
-  } else if (score >= 40 && score < 60 && currentLevel !== "LEVEL 3") {
+  } else if (score >= 20 && score < 30 && currentLevel !== "LEVEL 3") {
     displayLevelText("LEVEL 3", '#00bfff', -0.5);
     currentLevel = "LEVEL 3";
     loadUfoObject3(); 
-  }else if (score >= 60 && currentLevel !== "FINAL BOSS") {
+  }else if (score >= 30 && currentLevel !== "FINAL BOSS") {
     displayLevelText("FINAL BOSS", '#ff0000', -0.5);
     currentLevel = "FINAL BOSS";
-    loadNewUfo4();
-    displayHealthText();
+    loadUfoObject4();
   }
 }
 
@@ -1805,7 +1867,9 @@ function animate() {
 
   if (rocketObject) {
     updateRocketPosition();
-    checkRocketCollision();
+    //checkRocketCollision();
+    checkPowerUpCollision(); 
+
   }
   
   if (rocketLaunched) {
@@ -1829,8 +1893,6 @@ function animate() {
   }
 
 
-
-
   controls.update(); 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
@@ -1839,21 +1901,9 @@ function animate() {
 animate();
 
 
-/////////////////////////////////////////////////////
-                      /*START/PAUSE*/
-/////////////////////////////////////////////////////
 
-//START-STOP
-//TO-DO IMPLEMEMNTARE LOGICHE
-document.addEventListener('DOMContentLoaded', function () {
-  const startButton = document.getElementById('startButton');
-  startButton.addEventListener('click', startGame);
-});
-
-document.addEventListener('DOMContentLoaded', function (){
-  const startButton = document.getElementById('stopButton');
-  startButton.addEventListener('click', startGame);
-}); 
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
 
 
 //BODY
@@ -1889,12 +1939,14 @@ function goToIstruction() {
 
   popup.innerHTML = `
       <h2>Instructions</h2>
-      <p>Pause/Play = start and stop the game (you can also click 'space' in the keyboard )</p>
       <p>Home = return to the home page</p>
       <p>Volume = enable/disable audio</p>
       <p>To save the planet: destroy the invaders, pass the levels and reach the final boss.</p>
       <p>Be careful of the invaders' bullets that could cause you to die.</p>
        <p>You have three lives available</p>
+       <p>Pick Up the power Up to became immortal for ten second</p>
+       <p>Click R to restart/p>
+
       <button id="closePopUp">Chiudi</button>
   `;
   
@@ -1981,6 +2033,8 @@ function handleSpacebar() {
       createRocket(); 
       loadUfoObject();
       createHearts();
+      startAutomaticMovementPowerUp()
+      
     
     }
 

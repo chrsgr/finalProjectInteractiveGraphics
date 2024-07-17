@@ -14,6 +14,7 @@
   "dependencies": {
     "gsap": "^3.12.5",
     "obj": "^0.3.0",
-    "three": "^0.166.1"
+    "three": "^0.166.1",
+    "three-geometry": "^1.4.1"
   }
 }
