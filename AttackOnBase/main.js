@@ -1788,7 +1788,6 @@ function meteoriteMode() {
     meteorModeActive = !meteorModeActive;
 
     if (!meteorModeActive) {
-        // Clear all existing meteors
         for (let meteor of meteors) {
             scene.remove(meteor);
         }
