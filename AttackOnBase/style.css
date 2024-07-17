@@ -33,6 +33,16 @@ body, html {
   top: 30px; 
 }
 
+.meteorite-image {
+  position: absolute;
+  width: 40px;
+  height: auto;
+  top: 30px; 
+  left: 60px;
+  cursor: pointer; 
+
+}
+
 
 
 .startHome{
@@ -175,7 +185,7 @@ body, html {
 }
 
 
-.start-image:hover, .stop-image:hover, .volumImage:hover,  .infoImg:hover, .home-image:hover, .istruzioni-img :hover{
+.meteorite-image:hover, .volumImage:hover,  .infoImg:hover, .home-image:hover, .istruzioni-img :hover{
   opacity: 0.8; 
   
 }

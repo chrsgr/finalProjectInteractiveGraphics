@@ -1,3 +1,10 @@
+/*
+COSE ANOCRA DA FARE: 
+-pulsanti start/stop
+-power up
+-aggiungere timer
+-ombre e cambio luci
+*/
 
 import './style.css';
 import * as THREE from 'three';
@@ -96,6 +103,7 @@ controls.dampingFactor = 0.25;
 
 
 //LIGHTS 
+//TO-DO: dare una sistemata
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); 
 scene.add(ambientLight); 
 
@@ -109,6 +117,7 @@ const pointLight = new THREE.PointLight(0xffffff, 1, 100);
 pointLight.position.set(0, 0, 5); 
 pointLight.castShadow = true; 
 scene.add(pointLight);  
+
 
 
 
@@ -138,6 +147,26 @@ function createHearts() {
 
 
 
+/////////////////////////////////////////////////////
+                      /* POWER-UP */
+/////////////////////////////////////////////////////
+
+//TO-DO LOGICA COLLISIONE
+let powerUps = [];
+
+function createPowerUp() {
+  const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+  const material = new THREE.MeshBasicMaterial({ color: '#ff4500' });
+  const powerUp = new THREE.Mesh(geometry, material);
+
+  const randomX = (Math.random() - 0.5) * 10; 
+  powerUp.position.set(randomX, 4, 0);
+
+  scene.add(powerUp);
+
+  powerUps.push(powerUp);
+}
+
 
 
 /////////////////////////////////////////////////////
@@ -158,100 +187,52 @@ function loadUfoObject() {
       objLoader.load('UFO.obj', function(object) {
          // console.log('OBJ ok:', object);
 
-       
+         if (score >= 0 && score < 10){
+
           object.position.set(1, -2, 0);
           object.scale.set(0.40,0.40, 0.40);
           scene.add(object);
 
-          ufoObject = object;
+          
           const light = new THREE.PointLight('#ff00ff', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object.add(light); 
 
-          object.castShadow = true;
+          ufoObject = object;
+          ufoDestroyed = false;
+          startAutomaticMovement(); 
 
+} else if (score >=10 && score < 20 ){
 
-            ufoDestroyed = false;
-        
+        object.position.set(1.30, -2.2, 0);
+          object.scale.set(0.35,0.35, 0.35);
+          scene.add(object);
 
-          startAutomaticMovement();
-      });
-  }, undefined, function(error) {
-      //console.error('Error MTL file:', error);
-  });
-
-
-}
-
-//INVADERS 2(arancio)
-let ufoObject2; 
-function loadUfoObject2() {
-  const mtlLoader = new MTLLoader();
-  mtlLoader.load('AttackOnBase/public/obj/UFO_obj/UFO.mtl', function(materials) {
-      //console.log('MTL ok:', materials);
-
-      materials.preload();
-
-      const objLoader2 = new OBJLoader();
-      objLoader2.setMaterials(materials);
-      objLoader2.load('UFO.obj', function(object2) {
-         // console.log('OBJ ok:', object);
-
-       
-          object2.position.set(1.30, -2.2, 0);
-          object2.scale.set(0.35,0.35, 0.35);
-          scene.add(object2);
-
-          ufoObject2 = object2;
+          ufoObject = object;
           const light = new THREE.PointLight('#ff8c00', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
-          object2.add(light); 
-          
-          object2.castShadow = true;
+          object.add(light); 
 
-            ufoDestroyed2 = false;
-        
+          ufoObject = object;
+          ufoDestroyed = false;
+          startAutomaticMovement2(); 
 
-          startAutomaticMovement2();
-      });
-  }, undefined, function(error) {
-      //console.error('Error MTL file:', error);
-  });
+} else if (score >= 20 && score <30){
+          object.position.set(1.40, -2.3, 0);
+          object.scale.set(0.30,0.30, 0.30);
+          scene.add(object);
 
-
-}
-
-
-//INVADERS 3(verde acqua)
-let ufoObject3; 
-function loadUfoObject3() {
-  const mtlLoader = new MTLLoader();
-  mtlLoader.load('AttackOnBase/public/obj/UFO_obj/UFO.mtl', function(materials) {
-      //console.log('MTL ok:', materials);
-
-      materials.preload();
-
-      const objLoader3 = new OBJLoader();
-      objLoader3.setMaterials(materials);
-      objLoader3.load('UFO.obj', function(object3) {
-         // console.log('OBJ ok:', object);
-
-       
-          object3.position.set(1.40, -2.3, 0);
-          object3.scale.set(0.30,0.30, 0.30);
-          scene.add(object3);
-
-          ufoObject3 = object3;
+          ufoObject = object;
           const light = new THREE.PointLight('#00ffff', 3, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
-          object3.add(light); 
+          object.add(light); 
 
-          object3.castShadow = true;
-
-            ufoDestroyed3 = false;
+          ufoObject = object;
+          ufoDestroyed = false;
+          startAutomaticMovement3(); 
+       
+}
         
-
-          startAutomaticMovement3();
       });
   }, undefined, function(error) {
       //console.error('Error MTL file:', error);
@@ -259,8 +240,6 @@ function loadUfoObject3() {
 
 
 }
-
-
 
 
 
@@ -288,7 +267,6 @@ function loadUfoObject4() {
           const light = new THREE.PointLight('#ff0000', 10, 5); // reminder: colore, intensità, distanza
           light.position.set(0, 0, 0);
           object4.add(light); 
-          object4.castShadow = true;
 
             ufoDestroyed4 = false;
         
@@ -321,25 +299,24 @@ function createBullet(position) {
                    /*HEALTH BAR*/
 /////////////////////////////////////////////////////
 
-let healthEntity; 
-let health = 100; 
+let healthEntity;
+let health = 100;
+let healthGroup;
+let healthTextEntity = null;
 
 function printHealth() {
   if (!font) {
     return;
   }
 
- 
   if (healthEntity) {
     scene.remove(healthEntity);
-
-
-    healthEntity.geometry.dispose(); 
+    healthEntity.geometry.dispose();
     healthEntity.material.dispose();
   }
 
-  //SCORE
-  const geometry = new TextGeometry(`BOSS: ${health}%`, { 
+  const geometry = new TextGeometry((`BOSS: ${health}%`), {
+    color: '#dc143c',
     font: font,
     size: 0.3,
     height: 0.1,
@@ -348,44 +325,108 @@ function printHealth() {
   });
   geometry.center();
 
-  const material = new THREE.MeshStandardMaterial({  
+  const material = new THREE.MeshStandardMaterial({
     color: '#dc143c',
     roughness: 0.5,
     metalness: 0.1,
     transparent: true,
     opacity: 1,
-});
+  });
+
   const mesh = new THREE.Mesh(geometry, material);
-    
-  
+
   mesh.rotation.y = Math.PI / 2;
   mesh.position.y = -1.5;
   mesh.position.x = -5;
 
+  if (!healthGroup) {
+    healthGroup = new THREE.Group();
+    scene.add(healthGroup);
+  }
 
-  mesh.castShadow = true;
-  
+  scene.add(mesh);
   healthEntity = mesh;
 
-  scene.add(healthEntity);
+}
 
+function displayHealthText(healthName, xOffset) {
 
-  // Animazione GSAP
-  healthEntity= gsap.to(mesh.scale, {
-    x: 2,
-    y: -1.2,
-    z: 1.2,
-    duration: 0.5, 
-    ease: 'power2.out', 
-    yoyo: true, 
-    repeat: 1,
-    onComplete: function() {
-      if (healthEntity) {
-        scene.remove(healthEntity);
-      }
-      healthEntity = mesh;
-    }
+  if (healthTextEntity) {
+    scene.remove(healthTextEntity);
+    healthTextEntity.geometry.dispose();
+    healthTextEntity.material.dispose();
+  }
+
+  const healthGeometry = new TextGeometry(healthName, {
+    color: '#dc143c',
+    font: font,
+    size: 0.5,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
   });
+  healthGeometry.center();
+
+  const healthMaterial = new THREE.MeshStandardMaterial({
+    color: '#dc143c',
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const healthMesh = new THREE.Mesh(healthGeometry, healthMaterial);
+  healthMesh.position.y = 3;
+  healthMesh.position.x = xOffset;
+  healthMesh.name = healthName;
+
+  scene.add(healthMesh);
+  healthTextEntity = healthMesh;
+
+  setTimeout(() => {
+    if (healthTextEntity === healthMesh) {
+      scene.remove(healthTextEntity);
+      healthTextEntity.geometry.dispose();
+      healthTextEntity.material.dispose();
+      healthTextEntity = null;
+    }
+  }, 3000); 
+}
+
+
+
+function updateHealthText() {
+  if (healthEntity) {
+    healthEntity.geometry.dispose();
+    healthEntity.material.dispose();
+    scene.remove(healthEntity);
+  }
+
+  const geometry = new TextGeometry(`BOSS: ${health}%`, {
+    font: font,
+    size: 0.3,
+    height: 0.1,
+    curveSegments: 1,
+    bevelEnabled: false,
+  });
+  geometry.center();
+
+  const material = new THREE.MeshStandardMaterial({
+    color: '#dc143c',
+    roughness: 0.5,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 1,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+
+  mesh.rotation.y = Math.PI / 2;
+  mesh.position.y = -1.5;
+  mesh.position.x = -5;
+
+  scene.add(mesh);
+  healthEntity = mesh;
 }
 
 
@@ -395,7 +436,6 @@ function printHealth() {
                    /*DISTRUZIONE */
 /////////////////////////////////////////////////////
 
-//DISTRUZIONE 1
 let ufoDestroyed = false;
 function frantumaUfo(ufo) {
 
@@ -406,7 +446,7 @@ function frantumaUfo(ufo) {
 
 
   console.log("Frantumazione UFO");
-  const particleCount = 100; 
+  const particleCount = 200; 
   const particles = new THREE.Group(); 
 
   for (let i = 0; i < particleCount; i++) {
@@ -436,12 +476,8 @@ function frantumaUfo(ufo) {
   scene.add(particles); 
   scene.remove(ufo); 
 
-
- ufoBullets.forEach(bullet => {
-  scene.remove(bullet);
-});
-ufoBullets = [];
-
+  ufoBullets.forEach(bullet => scene.remove(bullet));
+  ufoBullets = [];
 
   if (rocketObject) {
     scene.remove(rocketObject);
@@ -471,186 +507,7 @@ ufoBullets = [];
 
     if (particles.children.length === 0) {
       scene.remove(particles);
-     loadNewUfo(); 
-    } else {
-      requestAnimationFrame(animateParticles);
-    }
-
-    
-  }
-
-  animateParticles(); 
-
-}
-
-
-
-
-//DISTRUZIONE 2
-let ufoDestroyed2 = false;
-function frantumaUfo2(ufo2) {
-
-  if (ufoDestroyed2) {
-    return;
-  }
-  ufoDestroyed2 = true;
-
-
-  console.log("Frantumazione UFO2");
-  const particleCount = 100; 
-  const particles = new THREE.Group(); 
-
-  for (let i = 0; i < particleCount; i++) {
-    const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
-    const particleMaterial = new THREE.MeshStandardMaterial({
-      color: '#ff8c00', 
-      transparent: true,
-      opacity: 1.0, 
-    });
-    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-
-    particle.position.copy(ufo2.position);
-    particle.position.x += (Math.random() - 0.5) * 2;
-    particle.position.y += (Math.random() - 0.5) * 2;
-    particle.position.z += (Math.random() - 0.5) * 2;
-
-    const velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 0.5,
-      (Math.random() - 0.5) * 0.5,
-      (Math.random() - 0.5) * 0.5
-    );
-    particle.velocity = velocity;
-
-    particles.add(particle); 
-  }
-
-  scene.add(particles); 
-  scene.remove(ufoObject2); 
-
- // Rimuovi i proiettili
- ufoBullets.forEach(bullet => {
-  scene.remove(bullet);
-});
-ufoBullets = [];
-
-  if (rocketObject) {
-    scene.remove(rocketObject);
-    rocketObject = null;
-    rocketLaunched = false;
-  }
-
-  score += 10;
-  printScore();
- 
-  const animationDuration = 2000; 
-  const startTimestamp = Date.now();
-
-  function animateParticles() {
-    const elapsed = Date.now() - startTimestamp;
-
-    particles.children.forEach(particle => {
-      particle.position.add(particle.velocity);
-
-      const opacity = 1.0 - elapsed / animationDuration;
-      particle.material.opacity = Math.max(opacity, 0);
-
-      if (opacity <= 0) {
-        particles.remove(particle);
-      }
-    });
-
-    if (particles.children.length === 0) {
-      scene.remove(particles);
-      loadNewUfo2(); 
-    } else {
-      requestAnimationFrame(animateParticles);
-    }
-
-    
-  }
-
-  animateParticles(); 
-
-}
-
-
-//DISTRUZIONE 3
-let ufoDestroyed3 = false;
-function frantumaUfo3(ufo3) {
-
-  if (ufoDestroyed3) {
-    return;
-  }
-  ufoDestroyed3 = true;
-
-
-  console.log("Frantumazione UFO3");
-  const particleCount = 100; 
-  const particles = new THREE.Group(); 
-
-  for (let i = 0; i < particleCount; i++) {
-    const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
-    const particleMaterial = new THREE.MeshStandardMaterial({
-      color: '#00ffff', 
-      transparent: true,
-      opacity: 1.0, 
-    });
-    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-
-    particle.position.copy(ufo3.position);
-    particle.position.x += (Math.random() - 0.5) * 2;
-    particle.position.y += (Math.random() - 0.5) * 2;
-    particle.position.z += (Math.random() - 0.5) * 2;
-
-    const velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 0.5,
-      (Math.random() - 0.5) * 0.5,
-      (Math.random() - 0.5) * 0.5
-    );
-    particle.velocity = velocity;
-
-    particles.add(particle); 
-  }
-
-  scene.add(particles); 
-  scene.remove(ufoObject3); 
-
-  // Rimuovi i proiettili
-  ufoBullets.forEach(bullet => {
-    scene.remove(bullet);
-  });
-  ufoBullets = [];
-
-
-  if (rocketObject) {
-    scene.remove(rocketObject);
-    rocketObject = null;
-    rocketLaunched = false;
-  }
-
-  score += 15;
-  printScore();
- 
-  const animationDuration = 2000; 
-  const startTimestamp = Date.now();
-
-  function animateParticles() {
-    const elapsed = Date.now() - startTimestamp;
-
-    particles.children.forEach(particle => {
-      particle.position.add(particle.velocity);
-
-      const opacity = 1.0 - elapsed / animationDuration;
-      particle.material.opacity = Math.max(opacity, 0);
-
-      if (opacity <= 0) {
-        particles.remove(particle);
-      }
-    });
-
-    if (particles.children.length === 0) {
-      scene.remove(particles);
-      loadNewUfo3(); 
+      loadNewUfo(); 
     } else {
       requestAnimationFrame(animateParticles);
     }
@@ -672,27 +529,16 @@ function frantumaUfo4(ufo4) {
   }
 
   health -= 25; 
-  printHealth(); 
-
   let scaleFactor = 0.8; 
   ufoObject4.scale.multiplyScalar(scaleFactor);
 
+  updateHealthText();
 
   if (health <= 0) {
     ufoDestroyed4 = true;
 
-    scene.remove(ufoObject);
-    scene.remove(ufoObject2);
-    scene.remove(ufoObject3);
     scene.remove(ufoObject4);
-    scene.remove (rocketObject);
-  ufoBullets.forEach(bullet => {
-    scene.remove(bullet);
-  });
-  ufoBullets = [];
-
-   displayWinText();
-
+    scene.remove (ufoBullets); 
 
 
     console.log("Frantumazione UFO4");
@@ -758,6 +604,7 @@ function frantumaUfo4(ufo4) {
       if (particles.children.length === 0) {
         scene.remove(particles);
         scene.remove (ufoBullets); 
+        displayWinText();
         
       } else {
         requestAnimationFrame(animateParticles);
@@ -876,27 +723,16 @@ function loadNewUfo() {
   createRocket(); 
 }
 
-//UFO2
-function loadNewUfo2() {
 
-  if (ufoObject2) {
-    scene.remove(ufoObject2);
-    ufoObject2 = null;
+//UFO4
+function loadNewUfo4() {
+
+  if (ufoObject4) {
+    scene.remove(ufoObject4);
+    ufoObject4= null;
   }
 
-  loadUfoObject2();
-  createRocket(); 
-}
-
-//UFO3
-function loadNewUfo3() {
-
-  if (ufoObject3) {
-    scene.remove(ufoObject3);
-    ufoObject3= null;
-  }
-
-  loadUfoObject3();
+  loadUfoObject4();
   createRocket(); 
 }
 
@@ -940,9 +776,8 @@ function startAutomaticMovement() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -2) {
-      showGameOverText();
-      return; 
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
     }
 
     //tempo shot
@@ -997,7 +832,7 @@ function startAutomaticMovement2() {
     }
 
     //aggiorno
-    ufoObject2.position.set(ufoPositionX, ufoVerticalPositionY, 0);
+    ufoObject.position.set(ufoPositionX, ufoVerticalPositionY, 0);
 
     //controllo cambio posizione
     if (ufoPositionX >= sceneWidth || ufoPositionX <= -sceneWidth) {
@@ -1011,9 +846,8 @@ function startAutomaticMovement2() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -2) {
-      showGameOverText();
-      return; 
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
     }
 
     //tempo shot
@@ -1030,14 +864,14 @@ function startAutomaticMovement2() {
   }
 
   function shootBulletsUfo() {
-    createBullet(ufoObject2.position.clone()); 
+    createBullet(ufoObject.position.clone()); 
 
     shootingInterval += 190; 
   }
 
   animateUFO2();
 
-  gsap.from(ufoObject2.position, {
+  gsap.from(ufoObject.position, {
     duration: 1,
     y: 5, 
     ease: 'power3.out',
@@ -1068,7 +902,7 @@ function startAutomaticMovement3() {
     }
 
     //aggiorno
-    ufoObject3.position.set(ufoPositionX, ufoVerticalPositionY, 0);
+    ufoObject.position.set(ufoPositionX, ufoVerticalPositionY, 0);
 
     //controllo cambio posizione
     if (ufoPositionX >= sceneWidth || ufoPositionX <= -sceneWidth) {
@@ -1082,9 +916,8 @@ function startAutomaticMovement3() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -2) {
-      showGameOverText();
-      return; 
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
     }
 
     //tempo shot
@@ -1101,14 +934,14 @@ function startAutomaticMovement3() {
   }
 
   function shootBulletsUfo() {
-    createBullet(ufoObject3.position.clone()); 
+    createBullet(ufoObject.position.clone()); 
 
     shootingInterval += 190; 
   }
 
   animateUFO3();
 
-  gsap.from(ufoObject3.position, {
+  gsap.from(ufoObject.position, {
     duration: 1,
     y: 5, 
     ease: 'power3.out',
@@ -1152,9 +985,8 @@ function startAutomaticMovement4() {
       moveDown = false; 
     }
 
-    if (ufoVerticalPositionY <= -2) {
-      showGameOverText();
-      return; 
+    if (ufoVerticalPositionY <= -5) {
+      ufoVerticalPositionY = 3; 
     }
 
     //tempo shot
@@ -1185,6 +1017,7 @@ function startAutomaticMovement4() {
    
   });
 }
+
 
 /////////////////////////////////////////////////////
                     /*ROCKET */
@@ -1242,10 +1075,7 @@ function createRocket() {
 
 let rocketLaunched = false;
 function moveRocket() {
-  if (!rocketObject) {
-    //console.error('rocketObject is null or undefined');
-    return;
-  }
+  if (!rocketObject) return;
 
   rocketLaunched = true; 
 
@@ -1254,15 +1084,12 @@ function moveRocket() {
     duration: 2,
     ease: 'power2.out',
     onComplete: () => {
-      if (!rocketObject) {
-        return;
-      }
       rocketObject.position.y = -3.5;
       rocketLaunched = false; 
+
     }
   });
 }
-
 
 
 //spostamento orizzontale
@@ -1287,9 +1114,9 @@ function updateRocketPosition() {
 }
 
 //lanciare
+//TO-DO: CONTROLLARE
 document.addEventListener('keydown', function (event) {
   if (event.key === 'A' || event.key === 'a') {
-    
     moveRocket();
   } else if (!rocketLaunched) { 
     if (event.key === 'ArrowLeft') {
@@ -1310,136 +1137,6 @@ document.addEventListener('keyup', function (event) {
   }
 });
 
-/////////////////////////////////////////////////////
-                      /* POWERUP*/
-/////////////////////////////////////////////////////
-let powerUps = [];
-let fallSpeed = 0.02;
-let shootingInterval = 1000; 
-let lastShotTime = 0;
-let isImmortal = false;
-
-const xmin = -4;  //limite sinistro
-const xmax = 4;   //limite destro
-const ymax = 5;    //limite superiore
-
-function getRandomPosition() {
-  const randomX = Math.random() * (xmax - xmin) + xmin;
-  return new THREE.Vector3(randomX, ymax, 0); 
-
-}
-
-function createPowerUp() {
-  const position = getRandomPosition();
-  const geometry = new THREE.SphereGeometry(0.1, 40, 40);
-  const material = new THREE.MeshBasicMaterial({ color: '#ff00ff' });
-  const powerUp = new THREE.Mesh(geometry, material);
-  powerUp.position.copy(position);
-  scene.add(powerUp);
-  powerUps.push(powerUp);
-}
-
-function startAutomaticMovementPowerUp() {
-  const currentTime = performance.now();
-  const timeSinceLastShot = currentTime - lastShotTime;
-
-  if (timeSinceLastShot >= shootingInterval) {
-    shootPowerUp(); 
-    lastShotTime = currentTime; 
-  }
-
-  movePowerUps(); 
-
-  checkPowerUpCollision(); 
-  requestAnimationFrame(startAutomaticMovementPowerUp);
-}
-
-function shootPowerUp() {
-  createPowerUp();
-  shootingInterval += 20000;
-}
-
-function movePowerUps() {
-  for (let i = 0; i < powerUps.length; i++) {
-    const powerUp = powerUps[i];
-    powerUp.position.y -= fallSpeed; 
-  }
-}
-
-function checkPowerUpCollision() {
-  if (rocketObject == null) {
-    return;
-  }
-
-  if (rocketObject && powerUps.length > 0) {
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-      const powerUp = powerUps[i];
-      const distance = rocketObject.position.distanceTo(powerUp.position);
-
-      if (distance <= 1) {
-        becomeImmortal(rocketObject);
-        scene.remove(powerUp);
-        powerUps.splice(i, 1); 
-      }        
-    }
-  }
-}
-
-
-function becomeImmortal(rocketObject) {
-
-
-  isImmortal = true;
-
-  const light = new THREE.PointLight(0xffff00, 1, 10);
-  light.position.set(0, 0, 0); 
-  rocketObject.add(light);
-
-
-  const bodyGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 35);
-  const bodyMaterial = new THREE.MeshPhongMaterial({ color: '#ffd700', emissive: '#ffd700', emissiveIntensity: 1 });
-  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0.5;
-  rocketObject.add(body);
-
-  //Punta 
-  const coneGeometry = new THREE.ConeGeometry(0.15, 0.3, 36);
-  const coneMaterial = new THREE.MeshPhongMaterial({ color: '#000000', emissive: '#000000', emissiveIntensity: 1 });
-  const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-  cone.position.y = 1.15;
-  rocketObject.add(cone);
-
-  //Ali
-  const wingGeometry = new THREE.BoxGeometry(0.05, 0.3, 0.1);
-  const wingMaterial = new THREE.MeshPhongMaterial({ color: '#000000', emissive: '#000000', emissiveIntensity: 1 });
-  const wing1 = new THREE.Mesh(wingGeometry, wingMaterial);
-  wing1.position.set(0.15, 0, 0);
-  rocketObject.add(wing1);
-
-  const wing2 = wing1.clone();
-  wing2.position.set(-0.15, 0, 0);
-  rocketObject.add(wing2);
-
-  const wing3 = wing1.clone();
-  wing3.position.set(0, 0, 0.15);
-  wing3.rotation.y = Math.PI / 2;
-  rocketObject.add(wing3);
-
-  const wing4 = wing3.clone();
-  wing4.position.set(0, 0, -0.15);
-  rocketObject.add(wing4);
-
-
-  setTimeout(() => {
-    isImmortal = false;
-  }, 10000); 
-}
-
-
-
-
-
-
 
 
 
@@ -1458,27 +1155,6 @@ function checkCollision() {
   }
 }
 
-//2
-function checkCollision2() {
-  if (rocketObject && ufoObject2 && !ufoDestroyed2) {
-    const distance = rocketObject.position.distanceTo(ufoObject2.position);
-    if (distance < 1.5) { 
-      frantumaUfo2(ufoObject2); 
-      destroyRocket();
-    }
-  }
-}
-
-//3
-function checkCollision3() {
-  if (rocketObject && ufoObject3 && !ufoDestroyed3) {
-    const distance = rocketObject.position.distanceTo(ufoObject3.position);
-    if (distance < 1.5) { 
-      frantumaUfo3(ufoObject3); 
-      destroyRocket();
-    }
-  }
-}
 
 //4
 function checkCollision4() {
@@ -1494,17 +1170,13 @@ function checkCollision4() {
 }
 
  //rocket-bullet
- function checkRocketCollision() {
-  if (rocketObject == null || isImmortal) {
-    return; 
-  }
-
+function checkRocketCollision() {
   if (rocketObject && ufoBullets.length > 0) {
     for (let i = ufoBullets.length - 1; i >= 0; i--) {
       const bullet = ufoBullets[i];
       const distance = rocketObject.position.distanceTo(bullet.position);
 
-      if (distance <= 1) {
+      if (distance < 0.7) {
         rocketObject.visible = false; 
         lives--;
         frantumaRocket(rocketObject); 
@@ -1516,7 +1188,7 @@ function checkCollision4() {
 
         //console.log('Lives:', lives);
         if (lives === 0) {
-          //console.log('Game over');
+         //console.log('Game over');
           showGameOverText(); 
           setTimeout(() => {
             rocketObject.position.set(0, -3.5, 0);
@@ -1541,10 +1213,6 @@ function checkCollision4() {
   }
 }
 
-
-
-
-
  
 /////////////////////////////////////////////////////
                       /* GAME OVER */
@@ -1560,7 +1228,7 @@ function showGameOverText() {
   }
 
   const gameOverText = "GAME OVER";
-  const color = '#dc143c'; 
+  const color = '#32cd32'; 
 
   const geometry = new TextGeometry(gameOverText, {
     font: font,
@@ -1590,7 +1258,7 @@ function showGameOverText() {
 
   setTimeout(() => {
     scene.remove(gameOverTextEntity);
-    restartGame();
+    restartGame(); 
   }, 3000); 
 
 }
@@ -1652,13 +1320,6 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'G' || event.key === 'g') {
-    restartGame();
-  }
-});
-
 ////////////////////////////////////////////////////////
                        /* RESTART */
 //////////////////////////////////////////////////////
@@ -1667,7 +1328,6 @@ function restart() {
   
   health = 100;
   printHealth();
-  
 
   score = 0; 
   printScore(); 
@@ -1680,15 +1340,7 @@ function restart() {
     scene.remove(ufoObject);
     ufoObject = null;
   }
-  if (ufoObject2) {
-    scene.remove(ufoObject2);
-    ufoObject2 = null;
-  }
-
-  if (ufoObject3) {
-    scene.remove(ufoObject3);
-    ufoObject3 = null;
-  }
+  
 
   if (ufoObject4) {
     scene.remove(ufoObject4);
@@ -1708,157 +1360,37 @@ function restart() {
 }
 
 
-//QUANDO SI PERDE DURANTE IL GIOCO
+//QUANDO DI PERDE
 function restartGame() { 
   
-  score = 0; 
- printScore(); 
+   score = 0; 
+  printScore(); 
+ 
 
+  ufoBullets.forEach(bullet => scene.remove(bullet));
+  ufoBullets = [];
 
- ufoBullets.forEach(bullet => scene.remove(bullet));
- ufoBullets = [];
-
- if (ufoObject) {
-   scene.remove(ufoObject);
-   ufoObject = null;
- }
-
- if (ufoObject4) {
-   scene.remove(ufoObject4);
-   ufoObject4 = null;
- }
-
- lives = 3;
- createHearts();
-
- rocketObject.position.set(0, -3.5, 0);
- rocketObject.visible = true;
-
- loadUfoObject();
-
-
- createBullet();
-}
-
-
-
-/////////////////////////////////////////////////////
-                      /* MATEORITI*/
-/////////////////////////////////////////////////////
-
-function createMeteor() {
-  var geometry = new THREE.DodecahedronGeometry(0.3); 
-  var material = new THREE.MeshStandardMaterial({
-      color: '#bdb76b', 
-      roughness: 0.8, 
-      metalness: 0.1,
-  });
-  var meteor = new THREE.Mesh(geometry, material);
-
-  meteor.position.x = Math.random() * 20 - 10; 
-  meteor.position.y = 5; 
-  meteor.position.z = Math.random() * 20 - 10; 
-
-  scene.add(meteor);
-
-  return meteor;
-}
-
-let meteors = [];
-
-function animateMeteors() {
-  if (Math.random() > 0.97) { 
-      var meteor = createMeteor();
-      meteors.push(meteor);
+  if (ufoObject) {
+    scene.remove(ufoObject);
+    ufoObject = null;
   }
 
-  for (let i = meteors.length - 1; i >= 0; i--) {
-      let meteor = meteors[i];
-      meteor.position.y -= 0.15; 
-
-      if (meteor.position.y < -5) {
-          scene.remove(meteor);
-          meteors.splice(i, 1);
-      }
+  if (ufoObject4) {
+    scene.remove(ufoObject4);
+    ufoObject4 = null;
   }
+
+  lives = 3;
+  createHearts();
+
+  rocketObject.position.set(0, -3.5, 0);
+  rocketObject.visible = true;
+
+  loadUfoObject();
+
+
+  createBullet();
 }
-
-let meteorModeActive = false;
-function meteoriteMode() {
-    meteorModeActive = !meteorModeActive;
-
-    if (!meteorModeActive) {
-        // Clear all existing meteors
-        for (let meteor of meteors) {
-            scene.remove(meteor);
-        }
-        meteors = [];
-    } else if (rocketObject && meteors.length > 0){
-        for (let i = meteors.length - 1; i >= 0; i--) {
-            const meteor = meteors[i];
-            const distance = rocketObject.position.distanceTo(meteor.position);
-
-            if (distance <= 1) {
-                console.log("Collision with meteor!");
-
-                rocketObject.visible = false;
-                lives--;
-                frantumaRocket(rocketObject);
-
-                scene.remove(meteor);
-                meteors.splice(i, 1);
-
-                createHearts();
-
-                if (lives === 0) {
-                    showGameOverText();
-                    setTimeout(() => {
-                        rocketObject.position.set(0, -3.5, 0);
-                        rocketObject.visible = true;
-
-                        if (gameOverTextEntity) {
-                            scene.remove(gameOverTextEntity);
-                            gameOverTextEntity.geometry.dispose();
-                            gameOverTextEntity.material.dispose();
-                            gameOverTextEntity = null;
-                        }
-                    }, 1000);
-                    return;
-                }
-
-                setTimeout(() => {
-                    rocketObject.position.set(0, -3.5, 0);
-                    rocketObject.visible = true;
-                }, 1000);
-            }
-        }
-    }
-
-    }
-    
-
-   
-  
-  
-
-
-
-
-document.addEventListener('DOMContentLoaded', function () {
-  const meteoImage = document.getElementById('meteoriteButtom');
-  meteoImage.addEventListener('click', meteoriteMode);
-});
-
-
-
-
-
-
-
-
-
-
-
 
 
 ////////////////////////////////////////////////////////
@@ -1917,22 +1449,15 @@ function printScore() {
   scene.add(mesh);
   scoreEntity = mesh;
 
-  if (score >= 0 && score < 10 && currentLevel !== "LEVEL 1") {
+  if (score >= 0 && score < 10) {
     displayLevelText("LEVEL 1", '#ff1493', -0.5);
-    currentLevel = "LEVEL 1";  
-  } else if (score >= 10 && score < 20 && currentLevel !== "LEVEL 2") {
+  } else if (score >= 10 && score < 20) {
     displayLevelText("LEVEL 2", '#ff8c00', -0.5);
-    currentLevel = "LEVEL 2";
-    loadUfoObject2(); 
-  } else if (score >= 20 && score < 30 && currentLevel !== "LEVEL 3") {
-    displayLevelText("LEVEL 3", '#00bfff', -0.5);
-    currentLevel = "LEVEL 3";
-    loadUfoObject3(); 
-  }else if (score >= 30 && currentLevel !== "FINAL BOSS") {
+  } else if (score >= 20 && score < 30) {
+    displayLevelText("LEVEL 3", '#00bfff', -0.5); 
+  }else if (score >= 30 ) {
     displayLevelText("FINAL BOSS", '#ff0000', -0.5);
-    currentLevel = "FINAL BOSS";
-    loadUfoObject4();
-    
+    displayHealthText();
   }
 }
 
@@ -1990,20 +1515,17 @@ function animate() {
 
   if (rocketObject) {
     updateRocketPosition();
-    //checkRocketCollision();
-    checkPowerUpCollision();
+    checkRocketCollision();
   }
-
   
   if (rocketLaunched) {
     checkCollision();
-    checkCollision2();
-    checkCollision3();
+ 
     checkCollision4();
 }
 
 
-  if (ufoObject || ufoObject2 || ufoDestroyed3 || ufoDestroyed4) {
+  if (ufoObject|| ufoDestroyed4) {
     ufoBullets.forEach(bullet => {
       bullet.position.y -= 0.1;
 
@@ -2016,11 +1538,9 @@ function animate() {
   }
 
 
-  if (meteorModeActive) {
-    animateMeteors();
-} 
 
-controls.update(); 
+
+  controls.update(); 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
@@ -2028,10 +1548,22 @@ controls.update();
 animate();
 
 
-
 /////////////////////////////////////////////////////
+                      /*START/PAUSE*/
 /////////////////////////////////////////////////////
 
+//START-STOP
+//TO-DO IMPLEMEMNTARE LOGICHE
+/* document.addEventListener('DOMContentLoaded', function () {
+  const startButton = document.getElementById('startButton');
+  startButton.addEventListener('click', startGame);
+});
+
+document.addEventListener('DOMContentLoaded', function (){
+  const startButton = document.getElementById('stopButton');
+  startButton.addEventListener('click', startGame);
+}); 
+ */
 
 //BODY
 document.addEventListener('DOMContentLoaded', function() {
@@ -2066,14 +1598,12 @@ function goToIstruction() {
 
   popup.innerHTML = `
       <h2>Instructions</h2>
+      <p>Pause/Play = start and stop the game (you can also click 'space' in the keyboard )</p>
       <p>Home = return to the home page</p>
       <p>Volume = enable/disable audio</p>
       <p>To save the planet: destroy the invaders, pass the levels and reach the final boss.</p>
       <p>Be careful of the invaders' bullets that could cause you to die.</p>
        <p>You have three lives available</p>
-       <p>Pick Up the power Up to became immortal for ten second</p>
-       <p>Click R to restart/p>
-
       <button id="closePopUp">Chiudi</button>
   `;
   
@@ -2097,6 +1627,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const istruImg = document.getElementById('istru');
   istruImg.addEventListener('click', goToIstruction);
 });
+
+
 
 
 window.onload = function() {
@@ -2158,7 +1690,7 @@ function handleSpacebar() {
       createRocket(); 
       loadUfoObject();
       createHearts();
-      startAutomaticMovementPowerUp();
+    
     }
 
   });
